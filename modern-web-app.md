@@ -4,7 +4,7 @@ The guidance simulates a common developer journey. It applies the principles of 
 #Architecture
 The diagram depicts the web application solution that you can deploy with the implementation guidance.
 
-![Reliable web app architecture diagram](./assets/Guide/ReliableWebAppArchitectureDiagram.png)
+![Modern web app architecture diagram](./assets/guide/ModernWebAppArchitectureDiagram.png)
 
 ## Considerations
 
