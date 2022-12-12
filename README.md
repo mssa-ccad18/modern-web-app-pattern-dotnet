@@ -1,33 +1,17 @@
-# Project
+# Modern Web App Pattern
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+> Disclaimer: this repository is under active development. we are not accepting issues at this time. As we work through the engineering phase this content is not yet expected to be deployable.
 
-As the maintainer of this project, please make a few updates:
+This repository provides resources to help developers build a Modern web app on Azure. A Modern Web App is a set of services, code, and infrastructure deployed in Azure that applies practices from the Well-Architected Framework. This pattern is designed to help you build a web app that follows Microsoft's recommended guidance for achieving reliability, scalability, and security in the cloud.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+Steps to get started:
 
-## Contributing
-
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Business scenario](business-scenario.md)
+1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Read the reference architecture](modern-web-app.md)
+1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Deploy solution](deploy-solution.md)
+1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Developer patterns](patterns.md)
+1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Understand service level objectives and cost](slo-and-cost.md)
+1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Find additional resources](additional-resources.md)
+1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Report security concerns](SECURITY.md)
+1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Find Support](SUPPORT.md)
+1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Contributing](contributing.md)
