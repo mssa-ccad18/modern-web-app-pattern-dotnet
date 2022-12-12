@@ -6,7 +6,7 @@ This repository provides resources to help developers build a Modern web app on 
 
 Steps to get started:
 
-1. WIP - <img src="assets/icons/microsoft.png" height="20px" /> [Business scenario](business-scenario.md)
+1. <img src="assets/icons/microsoft.png" height="20px" /> [Business scenario](business-scenario.md)
 1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Read the reference architecture](modern-web-app.md)
 1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Deploy solution](deploy-solution.md)
 1. WIP - <img src="assets/icons/dotnetbot.png" height="20px" /> [Developer patterns](patterns.md)
