@@ -1,6 +1,6 @@
 ﻿using Relecloud.Web.Models.TicketManagement;
 
-namespace Relecloud.Web.Services.MockServices
+namespace Relecloud.Web.CallCenter.Services.MockServices
 {
     public class MockTicketPurchaseService : ITicketPurchaseService
     {

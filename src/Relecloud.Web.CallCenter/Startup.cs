@@ -7,13 +7,13 @@ using Microsoft.Net.Http.Headers;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
-using Relecloud.Web.Infrastructure;
+using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
-using Relecloud.Web.Services;
-using Relecloud.Web.Services.ApiConcertService;
-using Relecloud.Web.Services.MockServices;
-using Relecloud.Web.Services.RelecloudApiServices;
+using Relecloud.Web.CallCenter.Services;
+using Relecloud.Web.CallCenter.Services.ApiConcertService;
+using Relecloud.Web.CallCenter.Services.MockServices;
+using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
 using System.Diagnostics;
 using System.Security.Claims;
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Relecloud.Web.Models.ConcertContext;
 
-namespace Relecloud.Web.ViewModels
+namespace Relecloud.Web.CallCenter.ViewModels
 {
     public class ConcertViewModel
     {

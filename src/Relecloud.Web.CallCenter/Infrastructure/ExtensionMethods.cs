@@ -7,7 +7,7 @@ using Relecloud.Web.Models.Search;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace Relecloud.Web.Infrastructure
+namespace Relecloud.Web.CallCenter.Infrastructure
 {
     public static class ExtensionMethods
     {

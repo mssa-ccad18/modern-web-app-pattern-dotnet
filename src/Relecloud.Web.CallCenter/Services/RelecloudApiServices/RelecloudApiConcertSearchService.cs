@@ -1,12 +1,12 @@
 ﻿using Microsoft.Identity.Web;
 using Microsoft.Net.Http.Headers;
-using Relecloud.Web.Infrastructure;
+using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.Models.Search;
 using Relecloud.Web.Models.Services;
 using System.Net;
 using System.Text.Json;
 
-namespace Relecloud.Web.Services.RelecloudApiServices
+namespace Relecloud.Web.CallCenter.Services.RelecloudApiServices
 {
     public class RelecloudApiConcertSearchService : IConcertSearchService
     {

@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Relecloud.Web.Infrastructure;
-using Relecloud.Web.Models;
+using Relecloud.Web.CallCenter.Infrastructure;
+using Relecloud.Web.CallCenter.ViewModels;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
 
-namespace Relecloud.Web.Controllers
+namespace Relecloud.Web.CallCenter.Controllers
 {
     [Authorize]
     public class TicketController : Controller

@@ -2,7 +2,7 @@
 using Relecloud.Web.Models.TicketManagement.Payment;
 using System.ComponentModel.DataAnnotations;
 
-namespace Relecloud.Web.ViewModels
+namespace Relecloud.Web.CallCenter.ViewModels
 {
     public class CheckoutViewModel
     {

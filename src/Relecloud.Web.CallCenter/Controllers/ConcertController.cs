@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Relecloud.Web.Infrastructure;
+using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Search;
 using Relecloud.Web.Models.Services;
-using Relecloud.Web.ViewModels;
+using Relecloud.Web.CallCenter.ViewModels;
 
-namespace Relecloud.Web.Controllers
+namespace Relecloud.Web.CallCenter.Controllers
 {
     public class ConcertController : Controller
     {
