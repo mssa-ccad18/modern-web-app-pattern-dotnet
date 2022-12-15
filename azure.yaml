@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://azuresdkreleasepreview.blob.core.windows.net/azd/schema/azure.yaml.json
+
+name: reliable-csharp-web
+metadata:
+  template: reliable-csharp-web@0.0.1-beta
+services:
+  web-call-center:
+    project: src/Relecloud.Web.CallCenter
+    language: csharp
+    host: appservice
+  web-public:
+    project: src/Relecloud.Web.Public
+    language: csharp
+    host: appservice
+  api:
+    project: src/Relecloud.Web.Api
+    language: csharp
+    host: appservice

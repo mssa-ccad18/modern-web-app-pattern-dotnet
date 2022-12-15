@@ -167,11 +167,85 @@ resource storageAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores/k
 
 var aspNetCoreEnvironment = isProd ? 'Production' : 'Development'
 
-resource web 'Microsoft.Web/sites@2021-03-01' = {
+resource webCallCenter 'Microsoft.Web/sites@2021-03-01' = {
   name: 'web-${resourceToken}-web-app'
   location: location
   tags: union(tags, {
-      'azd-service-name': 'web'
+      'azd-service-name': 'web-call-center'
+    })
+  properties: {
+    serverFarmId: webAppServicePlan.id
+    siteConfig: {
+      alwaysOn: true
+      ftpsState: 'FtpsOnly'
+
+      // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
+      vnetRouteAllEnabled: false
+    }
+    httpsOnly: true
+
+    // Enable regional virtual network integration.
+    virtualNetworkSubnetId: vnet::webSubnet.id
+  }
+
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+
+  resource appSettings 'config' = {
+    name: 'appsettings'
+    properties: {
+      ASPNETCORE_ENVIRONMENT: aspNetCoreEnvironment
+      AZURE_CLIENT_ID: managedIdentity.properties.clientId
+      APPLICATIONINSIGHTS_CONNECTION_STRING: webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
+      'App:AppConfig:Uri': appConfigSvc.properties.endpoint
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'false'
+      // App Insights settings
+      // https://docs.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net#application-settings-definitions
+      APPINSIGHTS_INSTRUMENTATIONKEY: webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_INSTRUMENTATION_KEY
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
+      XDT_MicrosoftApplicationInsights_Mode: 'recommended'
+      InstrumentationEngine_EXTENSION_VERSION: '~1'
+      XDT_MicrosoftApplicationInsights_BaseExtensions: '~1'
+    }
+  }
+
+  resource logs 'config' = {
+    name: 'logs'
+    properties: {
+      applicationLogs: {
+        fileSystem: {
+          level: 'Verbose'
+        }
+      }
+      detailedErrorMessages: {
+        enabled: true
+      }
+      failedRequestsTracing: {
+        enabled: true
+      }
+      httpLogs: {
+        fileSystem: {
+          enabled: true
+          retentionInDays: 1
+          retentionInMb: 35
+        }
+      }
+    }
+    dependsOn: [
+      appSettings
+    ]
+  }
+}
+
+resource webPublic 'Microsoft.Web/sites@2021-03-01' = {
+  name: 'web-${resourceToken}-web-app'
+  location: location
+  tags: union(tags, {
+      'azd-service-name': 'web-public'
     })
   properties: {
     serverFarmId: webAppServicePlan.id
