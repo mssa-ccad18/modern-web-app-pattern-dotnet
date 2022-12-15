@@ -2,12 +2,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Web.CallCenter.Infrastructure;
+using Relecloud.Web.CallCenter.Services;
+using Relecloud.Web.CallCenter.ViewModels;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Models.TicketManagement;
 using Relecloud.Web.Models.TicketManagement.Payment;
-using Relecloud.Web.CallCenter.Services;
-using Relecloud.Web.CallCenter.ViewModels;
 
 namespace Relecloud.Web.CallCenter.Controllers
 {
@@ -181,7 +181,7 @@ namespace Relecloud.Web.CallCenter.Controllers
                 this.logger.LogError(ex, $"Unable to perform checkout for ${User.Identity!.Name}");
                 ModelState.AddModelError(string.Empty, "We're sorry for the iconvenience but there was an error while trying to process your order. Please try again later.");
             }
-            
+
             model.Cart = await GetCartAsync();
             return View(nameof(Checkout), model);
         }
@@ -189,7 +189,7 @@ namespace Relecloud.Web.CallCenter.Controllers
         private IDictionary<int, int> MapToSerializableDictionary(IDictionary<Concert, int> cartData)
         {
             var result = new Dictionary<int, int>();
-            foreach(var key in cartData.Keys)
+            foreach (var key in cartData.Keys)
             {
                 result[key.Id] = cartData[key];
             }
@@ -225,7 +225,7 @@ namespace Relecloud.Web.CallCenter.Controllers
             {
                 concertsInCart = await this.concertService.GetConcertsByIdAsync(cartData.Keys);
             }
-            
+
             var concertCartData = concertsInCart.ToDictionary(concert => concert, concert => cartData[concert.Id]);
             return new CartViewModel(concertCartData);
         }
