@@ -1,4 +1,4 @@
-﻿namespace Relecloud.Web.Infrastructure
+﻿namespace Relecloud.Web.Public.Infrastructure
 {
     public static class Roles
     {

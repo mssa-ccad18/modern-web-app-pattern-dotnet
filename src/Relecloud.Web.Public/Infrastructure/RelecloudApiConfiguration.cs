@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Relecloud.Web.Infrastructure
+namespace Relecloud.Web.Public.Infrastructure
 {
     public class RelecloudApiConfiguration
     {

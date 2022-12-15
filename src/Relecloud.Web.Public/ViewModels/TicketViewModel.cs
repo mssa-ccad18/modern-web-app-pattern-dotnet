@@ -1,6 +1,6 @@
 ﻿using Relecloud.Web.Models.ConcertContext;
 
-namespace Relecloud.Web.Models
+namespace Relecloud.Web.Public.ViewModels
 {
     public class TicketViewModel
     {

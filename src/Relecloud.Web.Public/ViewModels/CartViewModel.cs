@@ -1,6 +1,6 @@
 ﻿using Relecloud.Web.Models.ConcertContext;
 
-namespace Relecloud.Web.ViewModels
+namespace Relecloud.Web.Public.ViewModels
 {
     public class CartViewModel
     {

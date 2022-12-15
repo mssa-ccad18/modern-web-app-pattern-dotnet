@@ -7,17 +7,19 @@ using Microsoft.Net.Http.Headers;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
-using Relecloud.Web.Infrastructure;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
-using Relecloud.Web.Services;
+using Relecloud.Web.Public.Infrastructure;
+using Relecloud.Web.Public.Services;
+using Relecloud.Web.Public.Services.MockServices;
+using Relecloud.Web.Public.Services.RelecloudApiServices;
 using Relecloud.Web.Services.ApiConcertService;
 using Relecloud.Web.Services.MockServices;
 using Relecloud.Web.Services.RelecloudApiServices;
 using System.Diagnostics;
 using System.Security.Claims;
 
-namespace Relecloud.Web
+namespace Relecloud.Web.Public
 {
     public class Startup
     {

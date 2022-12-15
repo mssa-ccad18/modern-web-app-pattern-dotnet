@@ -1,4 +1,4 @@
-﻿namespace Relecloud.Web.Services.RelecloudApiServices
+﻿namespace Relecloud.Web.Public.Services.RelecloudApiServices
 {
     public class RelecloudApiOptions
     {

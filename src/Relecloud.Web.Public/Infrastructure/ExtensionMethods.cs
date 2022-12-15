@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Relecloud.Web.Models.ConcertContext;
@@ -7,7 +6,7 @@ using Relecloud.Web.Models.Search;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace Relecloud.Web.Infrastructure
+namespace Relecloud.Web.Public.Infrastructure
 {
     public static class ExtensionMethods
     {

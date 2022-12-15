@@ -1,6 +1,6 @@
 ﻿using Relecloud.Web.Models.TicketManagement;
 
-namespace Relecloud.Web.Services
+namespace Relecloud.Web.Public.Services
 {
     public interface ITicketPurchaseService
     {

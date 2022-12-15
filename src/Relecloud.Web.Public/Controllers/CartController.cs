@@ -1,15 +1,15 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Relecloud.Web.Infrastructure;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Models.TicketManagement;
 using Relecloud.Web.Models.TicketManagement.Payment;
-using Relecloud.Web.Services;
-using Relecloud.Web.ViewModels;
+using Relecloud.Web.Public.Infrastructure;
+using Relecloud.Web.Public.Services;
+using Relecloud.Web.Public.ViewModels;
 
-namespace Relecloud.Web.Controllers
+namespace Relecloud.Web.Public.Controllers
 {
     public class CartController : Controller
     {

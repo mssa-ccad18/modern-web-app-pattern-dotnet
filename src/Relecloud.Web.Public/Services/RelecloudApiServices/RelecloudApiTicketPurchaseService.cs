@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-using Relecloud.Web.Infrastructure;
+using Relecloud.Web.Public.Infrastructure;
 using Relecloud.Web.Models.TicketManagement;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace Relecloud.Web.Services.RelecloudApiServices
+namespace Relecloud.Web.Public.Services.RelecloudApiServices
 {
     public class RelecloudApiTicketPurchaseService : ITicketPurchaseService
     {
