@@ -144,7 +144,7 @@ namespace Relecloud.Web.Public
         private void AddAzureAdServices(IServiceCollection services)
         {
             services.AddRazorPages().AddMicrosoftIdentityUI();
-            
+
             services.AddAuthorization(options =>
             {
                 options.AddPolicy(Roles.Administrator, authBuilder =>
@@ -181,7 +181,7 @@ namespace Relecloud.Web.Public
                     OnTokenValidated = async ctx =>
                     {
                         TransformRoleClaims(ctx);
-                        await CreateOrUpdateUserInformation(ctx);   
+                        await CreateOrUpdateUserInformation(ctx);
                     }
                 };
             }));

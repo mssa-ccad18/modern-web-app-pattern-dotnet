@@ -1,6 +1,6 @@
 using Azure.Identity;
-using Relecloud.Web.Public;
 using Microsoft.IdentityModel.Logging;
+using Relecloud.Web.Public;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -8,12 +8,12 @@ using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Relecloud.Web.CallCenter.Infrastructure;
-using Relecloud.Web.Models.ConcertContext;
-using Relecloud.Web.Models.Services;
 using Relecloud.Web.CallCenter.Services;
 using Relecloud.Web.CallCenter.Services.ApiConcertService;
 using Relecloud.Web.CallCenter.Services.MockServices;
 using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
+using Relecloud.Web.Models.ConcertContext;
+using Relecloud.Web.Models.Services;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -142,7 +142,7 @@ namespace Relecloud.Web
         private void AddAzureAdServices(IServiceCollection services)
         {
             services.AddRazorPages().AddMicrosoftIdentityUI();
-            
+
             services.AddAuthorization(options =>
             {
                 options.AddPolicy(Roles.Administrator, authBuilder =>
@@ -179,7 +179,7 @@ namespace Relecloud.Web
                     OnTokenValidated = async ctx =>
                     {
                         TransformRoleClaims(ctx);
-                        await CreateOrUpdateUserInformation(ctx);   
+                        await CreateOrUpdateUserInformation(ctx);
                     }
                 };
             }));

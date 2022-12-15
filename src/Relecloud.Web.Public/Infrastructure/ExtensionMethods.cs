@@ -99,7 +99,7 @@ namespace Relecloud.Web.Public.Infrastructure
 
             foreach (var errorMessage in errorMessages)
             {
-                foreach(var errorText in errorMessage.Value)
+                foreach (var errorText in errorMessage.Value)
                 {
                     modelStateDictionary.AddModelError(errorMessage.Key, errorText);
                 }

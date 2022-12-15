@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Web.Public.Infrastructure;
-using Relecloud.Web.Public.Models.ConcertContext;
-using Relecloud.Web.Public.Models.Search;
-using Relecloud.Web.Public.Models.Services;
 using Relecloud.Web.Public.ViewModels;
 
 namespace Relecloud.Web.Controllers
@@ -117,7 +114,7 @@ namespace Relecloud.Web.Controllers
 
         [HttpPost]
         [Authorize(Roles.Administrator)]
-        public async Task<IActionResult> Edit([Bind(Prefix = "Concert")]Concert model)
+        public async Task<IActionResult> Edit([Bind(Prefix = "Concert")] Concert model)
         {
             if (ModelState.IsValid)
             {
