@@ -95,12 +95,12 @@ module azureFrontDoor './azureFrontDoor.bicep' = if (isMultiLocationDeployment) 
   params: {
     resourceToken: primaryResourceToken
     tags: tags
-    primaryBackendAddress: primaryResources.outputs.WEB_URI
-    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_URI : 'none'
+    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
+    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
   }
 }
 
-output WEB_URI string = isMultiLocationDeployment ? azureFrontDoor.outputs.WEB_URI : primaryResources.outputs.WEB_URI
+output WEB_URI string = isMultiLocationDeployment ? azureFrontDoor.outputs.WEB_URI : primaryResources.outputs.WEB_CALLCENTER_URI
 output AZURE_LOCATION string = location
 
 output DEBUG_IS_MULTI_LOCATION_DEPLOYMENT bool = isMultiLocationDeployment
