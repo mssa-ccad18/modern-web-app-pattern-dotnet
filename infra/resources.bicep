@@ -1020,5 +1020,6 @@ resource closeConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-
   ]
 }
 
-output WEB_URI string = web.properties.defaultHostName
+output WEB_PUBLIC_URI string = webPublic.properties.defaultHostName
+output WEB_CALLCENTER_URI string = webCallCenter.properties.defaultHostName
 output API_URI string = api.properties.defaultHostName
