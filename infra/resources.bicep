@@ -168,7 +168,7 @@ resource storageAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores/k
 var aspNetCoreEnvironment = isProd ? 'Production' : 'Development'
 
 resource webCallCenter 'Microsoft.Web/sites@2021-03-01' = {
-  name: 'web-${resourceToken}-web-app'
+  name: 'web-${resourceToken}-call-app'
   location: location
   tags: union(tags, {
       'azd-service-name': 'web-call-center'
