@@ -167,14 +167,14 @@ resource storageAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores/k
 
 var aspNetCoreEnvironment = isProd ? 'Production' : 'Development'
 
-resource webCallCenter 'Microsoft.Web/sites@2021-03-01' = {
-  name: 'web-${resourceToken}-call-app'
+resource callcenterWeb 'Microsoft.Web/sites@2021-03-01' = {
+  name: 'callcenter-${resourceToken}-web-app'
   location: location
   tags: union(tags, {
       'azd-service-name': 'web-call-center'
     })
   properties: {
-    serverFarmId: webAppServicePlan.id
+    serverFarmId: callCenterAppServicePlan.id
     siteConfig: {
       alwaysOn: true
       ftpsState: 'FtpsOnly'
@@ -241,14 +241,14 @@ resource webCallCenter 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
-resource webPublic 'Microsoft.Web/sites@2021-03-01' = {
-  name: 'web-${resourceToken}-web-app'
+resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
+  name: 'publicweb-${resourceToken}-web-app'
   location: location
   tags: union(tags, {
       'azd-service-name': 'web-public'
     })
   properties: {
-    serverFarmId: webAppServicePlan.id
+    serverFarmId: publicwebAppServicePlan.id
     siteConfig: {
       alwaysOn: true
       ftpsState: 'FtpsOnly'
@@ -400,8 +400,25 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
 
 var appServicePlanSku = (isProd) ? 'P1v2' : 'B1'
 
-resource webAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
-  name: '${resourceToken}-web-plan'
+resource callCenterAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+  name: '${resourceToken}-callcenter-plan'
+  location: location
+  tags: tags
+  sku: {
+    name: appServicePlanSku
+  }
+  properties: {
+
+  }
+  dependsOn: [
+    // found that Redis network connectivity was not available if web app is deployed first (until restart)
+    // delaying deployment allows us to skip the restart
+    redisSetup
+  ]
+}
+
+resource publicwebAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+  name: '${resourceToken}-publicweb-plan'
   location: location
   tags: tags
   sku: {
@@ -434,12 +451,12 @@ resource apiAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   ]
 }
 
-resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-preview' = if (isProd) {
-  name: '${resourceToken}-web-plan-autoscale'
+resource publicwebAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-preview' = if (isProd) {
+  name: '${resourceToken}-publicweb-plan-autoscale'
   location: location
   tags: tags
   properties: {
-    targetResourceUri: webAppServicePlan.id
+    targetResourceUri: publicwebAppServicePlan.id
     enabled: true
     profiles: [
       {
@@ -452,7 +469,7 @@ resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-previe
         rules: [
           {
             metricTrigger: {
-              metricResourceUri: webAppServicePlan.id
+              metricResourceUri: publicwebAppServicePlan.id
               metricName: 'CpuPercentage'
               timeGrain: 'PT5M'
               statistic: 'Average'
@@ -470,7 +487,7 @@ resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-previe
           }
           {
             metricTrigger: {
-              metricResourceUri: webAppServicePlan.id
+              metricResourceUri: publicwebAppServicePlan.id
               metricName: 'CpuPercentage'
               timeGrain: 'PT5M'
               statistic: 'Average'
@@ -1020,6 +1037,6 @@ resource closeConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-
   ]
 }
 
-output WEB_PUBLIC_URI string = webPublic.properties.defaultHostName
-output WEB_CALLCENTER_URI string = webCallCenter.properties.defaultHostName
+output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
+output WEB_CALLCENTER_URI string = callcenterWeb.properties.defaultHostName
 output API_URI string = api.properties.defaultHostName
