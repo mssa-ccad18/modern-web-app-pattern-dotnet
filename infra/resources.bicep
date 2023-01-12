@@ -141,7 +141,7 @@ resource checkIfClientSecretExists 'Microsoft.Resources/deploymentScripts@2020-1
     }
   }
   properties: {
-    azCliVersion: '2.37.0'
+    azCliVersion: '2.40.0'
     retentionInterval: 'P1D'
     scriptContent: 'result=$(az keyvault secret list --vault-name ${kv.name} --query "[?name==\'${frontEndClientSecretName}\'].name" -o tsv); if [[ \${#result} -eq 0 ]]; then az keyvault secret set --name \'AzureAd--ClientSecret\' --vault-name ${kv.name} --value 1 --only-show-errors > /dev/null; fi'
     arguments: '--resourceToken \'${resourceToken}\''
@@ -951,7 +951,7 @@ resource openConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-0
   }
   properties: {
     forceUpdateTag: uniqueScriptId
-    azCliVersion: '2.37.0'
+    azCliVersion: '2.40.0'
     retentionInterval: 'P1D'
     environmentVariables: [
       {
@@ -987,7 +987,7 @@ resource closeConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-
   }
   properties: {
     forceUpdateTag: uniqueScriptId
-    azCliVersion: '2.37.0'
+    azCliVersion: '2.40.0'
     retentionInterval: 'P1D'
     environmentVariables: [
       {
