@@ -185,7 +185,7 @@ resource callcenterWeb 'Microsoft.Web/sites@2021-03-01' = {
     httpsOnly: true
 
     // Enable regional virtual network integration.
-    virtualNetworkSubnetId: vnet::webSubnet.id
+    virtualNetworkSubnetId: vnet::callcenterSubnet.id
   }
 
   identity: {
@@ -259,7 +259,7 @@ resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
     httpsOnly: true
 
     // Enable regional virtual network integration.
-    virtualNetworkSubnetId: vnet::webSubnet.id
+    virtualNetworkSubnetId: vnet::publicwebSubnet.id
   }
 
   identity: {
@@ -509,6 +509,64 @@ resource publicwebAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-
   }
 }
 
+resource callcenterAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-preview' = if (isProd) {
+  name: '${resourceToken}-callcenter-plan-autoscale'
+  location: location
+  tags: tags
+  properties: {
+    targetResourceUri: callCenterAppServicePlan.id
+    enabled: true
+    profiles: [
+      {
+        name: 'Auto created scale condition'
+        capacity: {
+          maximum: '10'
+          default: '1'
+          minimum: '1'
+        }
+        rules: [
+          {
+            metricTrigger: {
+              metricResourceUri: callCenterAppServicePlan.id
+              metricName: 'CpuPercentage'
+              timeGrain: 'PT5M'
+              statistic: 'Average'
+              timeWindow: 'PT10M'
+              timeAggregation: 'Average'
+              operator: 'GreaterThan'
+              threshold: scaleOutThreshold
+            }
+            scaleAction: {
+              direction: 'Increase'
+              type: 'ChangeCount'
+              value: string(1)
+              cooldown: 'PT10M'
+            }
+          }
+          {
+            metricTrigger: {
+              metricResourceUri: callCenterAppServicePlan.id
+              metricName: 'CpuPercentage'
+              timeGrain: 'PT5M'
+              statistic: 'Average'
+              timeWindow: 'PT10M'
+              timeAggregation: 'Average'
+              operator: 'LessThan'
+              threshold: scaleInThreshold
+            }
+            scaleAction: {
+              direction: 'Decrease'
+              type: 'ChangeCount'
+              value: string(1)
+              cooldown: 'PT10M'
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
 var scaleOutThreshold = 85
 var scaleInThreshold = 60
 
@@ -700,7 +758,8 @@ module storageSetup 'azureStorage.bicep' = {
 
 var privateEndpointSubnetName = 'subnetPrivateEndpoints'
 var subnetApiAppService = 'subnetApiAppService'
-var subnetWebAppService = 'subnetWebAppService'
+var subnetPublicwebAppService = 'subnetPublicwebAppService'
+var subnetCallcenterAppService = 'subnetCallcenterAppService'
 
 resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
   name: 'rc-${resourceToken}-vnet'
@@ -721,7 +780,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
         }
       }
       {
-        name: subnetWebAppService
+        name: subnetPublicwebAppService
         properties: {
           addressPrefix: '10.0.1.0/24'
           delegations: [
@@ -735,9 +794,23 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
         }
       }
       {
-        name: subnetApiAppService
+        name: subnetCallcenterAppService
         properties: {
           addressPrefix: '10.0.2.0/24'
+          delegations: [
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverfarms'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: subnetApiAppService
+        properties: {
+          addressPrefix: '10.0.3.0/24'
           delegations: [
             {
               name: 'delegation'
@@ -755,8 +828,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
     name: subnetApiAppService
   }
 
-  resource webSubnet 'subnets' existing = {
-    name: subnetWebAppService
+  resource callcenterSubnet 'subnets' existing = {
+    name: subnetCallcenterAppService
+  }
+  resource publicwebSubnet 'subnets' existing = {
+    name: subnetPublicwebAppService
   }
 }
 
