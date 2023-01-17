@@ -50,7 +50,7 @@ keyVaultName=$(az keyvault list -g "$resourceGroupName" --query "[?name.starts_w
 appConfigSvcName=$(az appconfig list -g "$resourceGroupName" --query "[].name" -o tsv)
 
 appServiceRootUri='azurewebsites.net' # hard coded because app svc does not return the public endpoint
-frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web'].name" -o tsv)
+frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web-call-center'].name" -o tsv)
 frontEndWebAppUri="https://$frontEndWebAppName.$appServiceRootUri"
 
 # assumes resourceToken is located in app service frontend web app name

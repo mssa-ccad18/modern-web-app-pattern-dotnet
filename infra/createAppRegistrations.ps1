@@ -58,7 +58,7 @@ $appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name"
 
 
 $appServiceRootUri = 'azurewebsites.net' # hard coded because app svc does not return the public endpoint
-$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web' ].name" -o tsv)
+$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web-call-center' ].name" -o tsv)
 $frontEndWebAppUri = "https://$frontEndWebAppName.$appServiceRootUri"
 
 $resourceToken = $frontEndWebAppName.substring(4, 13)
