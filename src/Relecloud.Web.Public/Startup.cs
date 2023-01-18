@@ -35,7 +35,7 @@ namespace Relecloud.Web.Public
             services.AddHttpContextAccessor();
             services.Configure<RelecloudApiOptions>(Configuration.GetSection("App:RelecloudApi"));
             services.AddOptions();
-            AddAzureAdServices(services);
+            AddAzureAdB2cServices(services);
             services.AddControllersWithViews();
             services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
 
@@ -141,7 +141,7 @@ namespace Relecloud.Web.Public
             }
         }
 
-        private void AddAzureAdServices(IServiceCollection services)
+        private void AddAzureAdB2cServices(IServiceCollection services)
         {
             services.AddRazorPages().AddMicrosoftIdentityUI();
 
@@ -153,9 +153,8 @@ namespace Relecloud.Web.Public
                 });
             });
 
-            var builder = services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
-            .EnableTokenAcquisitionToCallDownstreamApi(new string[] { })
-               .AddDownstreamWebApi("relecloud-api", Configuration.GetSection("GraphBeta"));
+            var builder = services.AddMicrosoftIdentityWebAppAuthentication(Configuration, Constants.AzureAdB2C)
+                    .EnableTokenAcquisitionToCallDownstreamApi(new string[] { Configuration["App:RelecloudApi:Scope"] });
 
             // when using Microsoft.Identity.Web to retrieve an access token on behalf of the authenticated user
             // you should use a shared session state provider.
@@ -173,14 +172,13 @@ namespace Relecloud.Web.Public
                 });
             }
 
-            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAd"));
+            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAdB2C"));
             services.Configure((Action<MicrosoftIdentityOptions>)(options =>
             {
                 options.Events = new OpenIdConnectEvents
                 {
                     OnTokenValidated = async ctx =>
                     {
-                        TransformRoleClaims(ctx);
                         await CreateOrUpdateUserInformation(ctx);
                     }
                 };
@@ -202,30 +200,6 @@ namespace Relecloud.Web.Public
 
                     var concertService = ctx.HttpContext.RequestServices.GetRequiredService<IConcertContextService>();
                     await concertService.CreateOrUpdateUserAsync(user);
-                }
-            }
-            catch (Exception ex)
-            {
-                var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                logger.LogError(ex, "Unhandled exception from Startup.TransformRoleClaims");
-            }
-        }
-
-        private static void TransformRoleClaims(TokenValidatedContext ctx)
-        {
-            try
-            {
-                const string RoleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
-                if (ctx.Principal?.Identity is not null)
-                {
-                    // Find all claims of the requested claim type, split their values by spaces
-                    // and then take the ones that aren't yet on the principal individually.
-                    var claims = ctx.Principal.FindAll("extension_AppRoles")
-                    .SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                    .Where(s => !ctx.Principal.HasClaim(RoleClaim, s)).ToList();
-
-                    // Add all new claims to the principal's identity.
-                    ((ClaimsIdentity)ctx.Principal.Identity).AddClaims(claims.Select(s => new Claim(RoleClaim, s)));
                 }
             }
             catch (Exception ex)
