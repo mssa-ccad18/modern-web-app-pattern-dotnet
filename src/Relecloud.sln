@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Models", "Relecloud.Web.Models\Relecloud.Web.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api", "Relecloud.Web.CallCenter.Api\Relecloud.Web.CallCenter.Api.csproj", "{0B28CA97-C813-41B7-A415-EFDCA4FB372E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Public.Api", "Relecloud.Web.Public.Api\Relecloud.Web.Public.Api.csproj", "{748AF99C-709A-4FAA-AD31-7876CD5469FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{257EA44D-0632-4029-ADD9-92EDD4B70931}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{257EA44D-0632-4029-ADD9-92EDD4B70931}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{257EA44D-0632-4029-ADD9-92EDD4B70931}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
