@@ -41,7 +41,7 @@ if (hasRequiredConfigSettings)
     startup.ConfigureServices(builder.Services);
 }
 
-var hasAzureAdSettings = !string.IsNullOrEmpty(builder.Configuration["AzureAd:ClientId"]);
+var hasAzureAdSettings = !string.IsNullOrEmpty(builder.Configuration["AzureAdB2C:ClientId"]);
 
 var app = builder.Build();
 
