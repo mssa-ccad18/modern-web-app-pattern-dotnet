@@ -81,7 +81,7 @@ resource baseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurationSto
   parent: appConfigSvc
   name: 'App:RelecloudApi:BaseUri'
   properties: {
-    value: 'https://${api.properties.defaultHostName}'
+    value: 'https://${callcenterApi.properties.defaultHostName}'
   }
   dependsOn: [
     openConfigSvcsForEdits
@@ -315,14 +315,14 @@ resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
-resource api 'Microsoft.Web/sites@2021-01-15' = {
-  name: 'api-${resourceToken}-web-app'
+resource callcenterApi 'Microsoft.Web/sites@2021-01-15' = {
+  name: 'callcenterapi-${resourceToken}-web-app'
   location: location
   tags: union(tags, {
-      'azd-service-name': 'api'
+      'azd-service-name': 'call-center-api'
     })
   properties: {
-    serverFarmId: apiAppServicePlan.id
+    serverFarmId: callCenterApiAppServicePlan.id
     siteConfig: {
       alwaysOn: true
       ftpsState: 'FtpsOnly'
@@ -333,7 +333,82 @@ resource api 'Microsoft.Web/sites@2021-01-15' = {
     httpsOnly: true
 
     // Enable regional virtual network integration.
-    virtualNetworkSubnetId: vnet::apiSubnet.id
+    virtualNetworkSubnetId: vnet::callcenterapiSubnet.id
+  }
+
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+
+  resource appSettings 'config' = {
+    name: 'appsettings'
+    properties: {
+      ASPNETCORE_ENVIRONMENT: aspNetCoreEnvironment
+      AZURE_CLIENT_ID: managedIdentity.properties.clientId
+      APPLICATIONINSIGHTS_CONNECTION_STRING: webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
+      'Api:AppConfig:Uri': appConfigSvc.properties.endpoint
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'false'
+      // App Insights settings
+      // https://docs.microsoft.com/en-us/azure/azure-monitor/app/azure-web-apps-net#application-settings-definitions
+      APPINSIGHTS_INSTRUMENTATIONKEY: webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_INSTRUMENTATION_KEY
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
+      XDT_MicrosoftApplicationInsights_Mode: 'recommended'
+      InstrumentationEngine_EXTENSION_VERSION: '~1'
+      XDT_MicrosoftApplicationInsights_BaseExtensions: '~1'
+    }
+  }
+
+  resource logs 'config' = {
+    name: 'logs'
+    properties: {
+      applicationLogs: {
+        fileSystem: {
+          level: 'Verbose'
+        }
+      }
+      detailedErrorMessages: {
+        enabled: true
+      }
+      failedRequestsTracing: {
+        enabled: true
+      }
+      httpLogs: {
+        fileSystem: {
+          enabled: true
+          retentionInDays: 1
+          retentionInMb: 35
+        }
+      }
+    }
+    dependsOn: [
+      appSettings
+    ]
+  }
+}
+
+
+resource publicApi 'Microsoft.Web/sites@2021-01-15' = {
+  name: 'publicapi-${resourceToken}-web-app'
+  location: location
+  tags: union(tags, {
+      'azd-service-name': 'public-api'
+    })
+  properties: {
+    serverFarmId: publicApiAppServicePlan.id
+    siteConfig: {
+      alwaysOn: true
+      ftpsState: 'FtpsOnly'
+
+      // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
+      vnetRouteAllEnabled: false
+    }
+    httpsOnly: true
+
+    // Enable regional virtual network integration.
+    virtualNetworkSubnetId: vnet::publicapiSubnet.id
   }
 
   identity: {
@@ -434,8 +509,25 @@ resource publicwebAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   ]
 }
 
-resource apiAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
-  name: '${resourceToken}-api-plan'
+resource publicApiAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+  name: '${resourceToken}-publicapi-plan'
+  location: location
+  tags: tags
+  sku: {
+    name: appServicePlanSku
+  }
+  properties: {
+
+  }
+  dependsOn: [
+    // found that Redis network connectivity was not available if web app is deployed first (until restart)
+    // delaying deployment allows us to skip the restart
+    redisSetup
+  ]
+}
+
+resource callCenterApiAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+  name: '${resourceToken}-callcenterapi-plan'
   location: location
   tags: tags
   sku: {
@@ -570,12 +662,12 @@ resource callcenterAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01
 var scaleOutThreshold = 85
 var scaleInThreshold = 60
 
-resource apiAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
+resource callCenterAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
   name: '${resourceToken}-api-plan-autoscale'
   location: location
   tags: tags
   properties: {
-    targetResourceUri: apiAppServicePlan.id
+    targetResourceUri: callCenterApiAppServicePlan.id
     enabled: true
     profiles: [
       {
@@ -588,7 +680,7 @@ resource apiAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
         rules: [
           {
             metricTrigger: {
-              metricResourceUri: apiAppServicePlan.id
+              metricResourceUri: callCenterApiAppServicePlan.id
               metricName: 'CpuPercentage'
               timeGrain: 'PT5M'
               statistic: 'Average'
@@ -606,7 +698,65 @@ resource apiAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
           }
           {
             metricTrigger: {
-              metricResourceUri: apiAppServicePlan.id
+              metricResourceUri: callCenterApiAppServicePlan.id
+              metricName: 'CpuPercentage'
+              timeGrain: 'PT5M'
+              statistic: 'Average'
+              timeWindow: 'PT10M'
+              timeAggregation: 'Average'
+              operator: 'LessThan'
+              threshold: scaleInThreshold
+            }
+            scaleAction: {
+              direction: 'Decrease'
+              type: 'ChangeCount'
+              value: string(1)
+              cooldown: 'PT10M'
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+resource publicApiAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
+  name: '${resourceToken}-publicapi-plan-autoscale'
+  location: location
+  tags: tags
+  properties: {
+    targetResourceUri: publicApiAppServicePlan.id
+    enabled: true
+    profiles: [
+      {
+        name: 'Auto created scale condition'
+        capacity: {
+          minimum: string(1)
+          maximum: string(10)
+          default: string(1)
+        }
+        rules: [
+          {
+            metricTrigger: {
+              metricResourceUri: publicApiAppServicePlan.id
+              metricName: 'CpuPercentage'
+              timeGrain: 'PT5M'
+              statistic: 'Average'
+              timeWindow: 'PT10M'
+              timeAggregation: 'Average'
+              operator: 'GreaterThan'
+              threshold: scaleOutThreshold
+            }
+            scaleAction: {
+              direction: 'Increase'
+              type: 'ChangeCount'
+              value: string(1)
+              cooldown: 'PT10M'
+            }
+          }
+          {
+            metricTrigger: {
+              metricResourceUri: publicApiAppServicePlan.id
               metricName: 'CpuPercentage'
               timeGrain: 'PT5M'
               statistic: 'Average'
@@ -757,7 +907,8 @@ module storageSetup 'azureStorage.bicep' = {
 }
 
 var privateEndpointSubnetName = 'subnetPrivateEndpoints'
-var subnetApiAppService = 'subnetApiAppService'
+var subnetPublicApiAppService = 'subnetPublicApiAppService'
+var subnetCallcenterApiAppService = 'subnetCallcenterApiAppService'
 var subnetPublicwebAppService = 'subnetPublicwebAppService'
 var subnetCallcenterAppService = 'subnetCallcenterAppService'
 
@@ -808,9 +959,23 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
         }
       }
       {
-        name: subnetApiAppService
+        name: subnetPublicApiAppService
         properties: {
           addressPrefix: '10.0.3.0/24'
+          delegations: [
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverfarms'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: subnetCallcenterApiAppService
+        properties: {
+          addressPrefix: '10.0.4.0/24'
           delegations: [
             {
               name: 'delegation'
@@ -824,8 +989,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
     ]
   }
 
-  resource apiSubnet 'subnets' existing = {
-    name: subnetApiAppService
+  resource callcenterapiSubnet 'subnets' existing = {
+    name: subnetCallcenterApiAppService
+  }
+
+  resource publicapiSubnet 'subnets' existing = {
+    name: subnetPublicApiAppService
   }
 
   resource callcenterSubnet 'subnets' existing = {
@@ -1115,4 +1284,5 @@ resource closeConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-
 
 output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
 output WEB_CALLCENTER_URI string = callcenterWeb.properties.defaultHostName
-output API_URI string = api.properties.defaultHostName
+output PUBLIC_API_URI string = publicApi.properties.defaultHostName
+output CALLCENTER_API_URI string = callcenterApi.properties.defaultHostName
