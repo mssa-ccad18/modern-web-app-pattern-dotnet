@@ -33,7 +33,7 @@ namespace Relecloud.Web.Public
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
-            services.Configure<RelecloudApiOptions>(Configuration.GetSection("App:RelecloudApi"));
+            services.Configure<RelecloudApiOptions>(Configuration.GetSection("PubApp:RelecloudApi"));
             services.AddOptions();
             AddAzureAdB2cServices(services);
             services.AddControllersWithViews();
@@ -66,7 +66,7 @@ namespace Relecloud.Web.Public
 
         private void AddTicketPurchaseService(IServiceCollection services)
         {
-            var baseUri = Configuration["App:RelecloudApi:BaseUri"];
+            var baseUri = Configuration["PubApp:RelecloudApi:BaseUri"];
             if (string.IsNullOrWhiteSpace(baseUri))
             {
                 services.AddScoped<ITicketPurchaseService, MockTicketPurchaseService>();
@@ -77,7 +77,7 @@ namespace Relecloud.Web.Public
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
                     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.Public");
                 })
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
@@ -86,7 +86,7 @@ namespace Relecloud.Web.Public
 
         private void AddConcertSearchService(IServiceCollection services)
         {
-            var baseUri = Configuration["App:RelecloudApi:BaseUri"];
+            var baseUri = Configuration["PubApp:RelecloudApi:BaseUri"];
             if (string.IsNullOrWhiteSpace(baseUri))
             {
                 services.AddScoped<IConcertSearchService, MockConcertSearchService>();
@@ -97,7 +97,7 @@ namespace Relecloud.Web.Public
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
                     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.Public");
                 })
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
@@ -115,10 +115,16 @@ namespace Relecloud.Web.Public
 
         private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
         {
+            int circuitTimeoutInSeconds = 30;
+            if (Debugger.IsAttached)
+            {
+                circuitTimeoutInSeconds = 3;
+            }
+
             return HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(circuitTimeoutInSeconds));
         }
 
         private void AddConcertContextService(IServiceCollection services)
@@ -134,7 +140,7 @@ namespace Relecloud.Web.Public
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
                     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.Public");
                 })
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
@@ -154,7 +160,7 @@ namespace Relecloud.Web.Public
             });
 
             var builder = services.AddMicrosoftIdentityWebAppAuthentication(Configuration, Constants.AzureAdB2C)
-                    .EnableTokenAcquisitionToCallDownstreamApi(new string[] { Configuration["App:RelecloudApi:Scope"] });
+                    .EnableTokenAcquisitionToCallDownstreamApi(new string[] { Configuration["PubApp:RelecloudApi:Scope"] });
 
             // when using Microsoft.Identity.Web to retrieve an access token on behalf of the authenticated user
             // you should use a shared session state provider.
