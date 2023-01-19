@@ -4,10 +4,9 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>132c573d-ea30-413d-9176-5f0fe269d568</UserSecretsId>
-	</PropertyGroup>
-	<PropertyGroup>
+	
 		<IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+		<UserSecretsId>a3913e97-3f48-4ad3-aee8-dbcf0d6c3fa0</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
