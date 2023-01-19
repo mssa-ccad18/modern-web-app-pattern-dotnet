@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using Relecloud.Web.Api.Infrastructure;
@@ -24,7 +25,7 @@ namespace Relecloud.Web.Api
         public void ConfigureServices(IServiceCollection services)
         {
             // Add services to the container.
-            AddAzureAdServices(services);
+            AddAzureAdB2cServices(services);
 
             services.AddControllers();
 
@@ -45,10 +46,17 @@ namespace Relecloud.Web.Api
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
 
-        private void AddAzureAdServices(IServiceCollection services)
+        private void AddAzureAdB2cServices(IServiceCollection services)
         {
             // Adds Microsoft Identity platform (AAD v2.0) support to protect this Api
-            services.AddMicrosoftIdentityWebApiAuthentication(Configuration, "Api:AzureAd");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddMicrosoftIdentityWebApi(options =>
+                    {
+                        Configuration.Bind("Api:AzureAdB2C", options);
+
+                        options.TokenValidationParameters.NameClaimType = "name";
+                    },
+            options => { Configuration.Bind("Api:AzureAdB2C", options); });
         }
 
         private void AddTicketManagementService(IServiceCollection services)
