@@ -12,7 +12,11 @@ services:
     project: src/Relecloud.Web.Public
     language: csharp
     host: appservice
-  api:
-    project: src/Relecloud.Web.Api
+  public-api:
+    project: src/Relecloud.Web.Public.Api
+    language: csharp
+    host: appservice
+  call-center-api:
+    project: src/Relecloud.Web.CallCenter.Api
     language: csharp
     host: appservice
