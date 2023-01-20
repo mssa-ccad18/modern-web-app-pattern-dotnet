@@ -248,7 +248,7 @@ resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
       'azd-service-name': 'web-public'
     })
   properties: {
-    serverFarmId: publicwebAppServicePlan.id
+    serverFarmId: publicWebAppServicePlan.id
     siteConfig: {
       alwaysOn: true
       ftpsState: 'FtpsOnly'
@@ -492,7 +492,7 @@ resource callCenterAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   ]
 }
 
-resource publicwebAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+resource publicWebAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: '${resourceToken}-publicweb-plan'
   location: location
   tags: tags
@@ -543,238 +543,43 @@ resource callCenterApiAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   ]
 }
 
-resource publicwebAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-preview' = if (isProd) {
-  name: '${resourceToken}-publicweb-plan-autoscale'
-  location: location
-  tags: tags
-  properties: {
-    targetResourceUri: publicwebAppServicePlan.id
-    enabled: true
-    profiles: [
-      {
-        name: 'Auto created scale condition'
-        capacity: {
-          maximum: '10'
-          default: '1'
-          minimum: '1'
-        }
-        rules: [
-          {
-            metricTrigger: {
-              metricResourceUri: publicwebAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: scaleOutThreshold
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricResourceUri: publicwebAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: scaleInThreshold
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-        ]
-      }
-    ]
+module publicWebServicePlanAutoScale './appSvcAutoScaleSettings.bicep' = {
+  name: 'deploy-${publicWebAppServicePlan.name}-scalesettings'
+  params: {
+    appServicePlanName: publicWebAppServicePlan.name
+    location: location
+    isProd: isProd
+    tags: tags
   }
 }
 
-resource callcenterAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-preview' = if (isProd) {
-  name: '${resourceToken}-callcenter-plan-autoscale'
-  location: location
-  tags: tags
-  properties: {
-    targetResourceUri: callCenterAppServicePlan.id
-    enabled: true
-    profiles: [
-      {
-        name: 'Auto created scale condition'
-        capacity: {
-          maximum: '10'
-          default: '1'
-          minimum: '1'
-        }
-        rules: [
-          {
-            metricTrigger: {
-              metricResourceUri: callCenterAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: scaleOutThreshold
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricResourceUri: callCenterAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: scaleInThreshold
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-        ]
-      }
-    ]
+module callCenterServicePlanAutoScale './appSvcAutoScaleSettings.bicep' = {
+  name: 'deploy-${callCenterAppServicePlan.name}-scalesettings'
+  params: {
+    appServicePlanName: callCenterAppServicePlan.name
+    location: location
+    isProd: isProd
+    tags: tags
   }
 }
 
-var scaleOutThreshold = 85
-var scaleInThreshold = 60
-
-resource callCenterAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
-  name: '${resourceToken}-api-plan-autoscale'
-  location: location
-  tags: tags
-  properties: {
-    targetResourceUri: callCenterApiAppServicePlan.id
-    enabled: true
-    profiles: [
-      {
-        name: 'Auto created scale condition'
-        capacity: {
-          minimum: string(1)
-          maximum: string(10)
-          default: string(1)
-        }
-        rules: [
-          {
-            metricTrigger: {
-              metricResourceUri: callCenterApiAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: scaleOutThreshold
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricResourceUri: callCenterApiAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: scaleInThreshold
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-        ]
-      }
-    ]
+module publicApiServicePlanAutoScale './appSvcAutoScaleSettings.bicep' = {
+  name: 'deploy-${publicApiAppServicePlan.name}-scalesettings'
+  params: {
+    appServicePlanName: publicApiAppServicePlan.name
+    location: location
+    isProd: isProd
+    tags: tags
   }
 }
 
-resource publicApiAppScaleRule 'Microsoft.Insights/autoscalesettings@2014-04-01' = {
-  name: '${resourceToken}-publicapi-plan-autoscale'
-  location: location
-  tags: tags
-  properties: {
-    targetResourceUri: publicApiAppServicePlan.id
-    enabled: true
-    profiles: [
-      {
-        name: 'Auto created scale condition'
-        capacity: {
-          minimum: string(1)
-          maximum: string(10)
-          default: string(1)
-        }
-        rules: [
-          {
-            metricTrigger: {
-              metricResourceUri: publicApiAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: scaleOutThreshold
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricResourceUri: publicApiAppServicePlan.id
-              metricName: 'CpuPercentage'
-              timeGrain: 'PT5M'
-              statistic: 'Average'
-              timeWindow: 'PT10M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: scaleInThreshold
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: string(1)
-              cooldown: 'PT10M'
-            }
-          }
-        ]
-      }
-    ]
+module callCenterApiServicePlanAutoScale './appSvcAutoScaleSettings.bicep' = {
+  name: 'deploy-${callCenterApiAppServicePlan.name}-scalesettings'
+  params: {
+    appServicePlanName: callCenterApiAppServicePlan.name
+    location: location
+    isProd: isProd
+    tags: tags
   }
 }
 
