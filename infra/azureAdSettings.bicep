@@ -50,12 +50,14 @@ param azureAdB2cResetPolicyId string
 @description('A URL provided by your web app that will clear session info when a user signs out')
 param azureAdB2cSignoutCallback string
 
+// reminder: the semi-colon is not a valid character for a kv key name so we use alternate dotnet syntax of -- to specify this nested config setting
+var clientSecretName = 'AzureAdB2C--ClientSecret'
+
 resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
   name: keyVaultName
 
-  resource kvSecretStorageAcct 'secrets@2021-11-01-preview' = {
-    // reminder: the semi-colon is not a valid character for a kv key name so we use alternate dotnet syntax of -- to specify this nested config setting
-    name: 'AzureAdB2C--ClientSecret'
+  resource kvFrontEndAzureAdB2cClientSecret 'secrets@2021-11-01-preview' = {
+    name: clientSecretName
     properties: {
       value: frontEndAzureAdB2cClientSecret
     }
@@ -66,7 +68,17 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
   name: appConfigurationServiceName
   
   //begin front-end web app settings
-  resource appConfigSvcFrontEndAzureAdB2CApiScope 'keyValues@2022-05-01' = {
+  resource appConfigSvcFrontEndAzureAdB2cClientSecret 'keyValues@2022-05-01' = {
+    name: 'AzureAdB2C:ClientSecret'
+    properties: {
+      value: string({
+        uri: '${kv.properties.vaultUri}secrets/${clientSecretName}'
+      })
+      contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    }
+  }
+
+  resource appConfigSvcFrontEndAzureAdB2cApiScope 'keyValues@2022-05-01' = {
     name: 'PubApp:RelecloudApi:AttendeeScope'
     properties: {
       value: frontEndAzureAdB2CApiScope
