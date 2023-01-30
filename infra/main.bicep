@@ -25,7 +25,7 @@ param azureSqlPassword string = ''
 // the following Azure AD B2C information can be found in the Azure portal when examining the Azure AD B2C tenant's app registration page
 // read the following to learn more: https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-register-applications?tabs=app-reg-ga
 
-// these settings are also documented in the template. Please keep both locations in sync
+// these AADB2C settings are also documented in the resources.bicep. Please keep both locations in sync
 
 @minLength(1)
 @description('A scope used by the front-end public web app to get authorized access to the public web api. Looks similar to https://myb2ctestorg.onmicrosoft.com/fbb6ce3b-c65f-4708-ae94-5069d1f821b4/Attendee')
@@ -118,6 +118,16 @@ module primaryResources './resources.bicep' = {
     principalId: principalId
     resourceToken: primaryResourceToken
     tags: tags
+    apiAzureAdB2cClientId: apiAzureAdB2cClientId
+    azureAdB2cDomain: azureAdB2cDomain
+    azureAdB2cInstance: azureAdB2cInstance
+    azureAdB2cResetPolicyId: azureAdB2cResetPolicyId
+    azureAdB2cSignoutCallback: azureAdB2cSignoutCallback
+    azureAdB2cSignupSigninPolicyId: azureAdB2cSignupSigninPolicyId
+    azureAdB2cTenantId: azureAdB2cTenantId
+    frontEndAzureAdB2CApiScope: frontEndAzureAdB2CApiScope
+    frontEndAzureAdB2cClientId: frontEndAzureAdB2cClientId
+    frontEndAzureAdB2cClientSecret: frontEndAzureAdB2cClientSecret
   }
 }
 
@@ -132,6 +142,16 @@ module secondaryResources './resources.bicep' = if (isMultiLocationDeployment) {
     principalId: principalId
     resourceToken: secondaryResourceToken
     tags: tags
+    apiAzureAdB2cClientId: apiAzureAdB2cClientId
+    azureAdB2cDomain: azureAdB2cDomain
+    azureAdB2cInstance: azureAdB2cInstance
+    azureAdB2cResetPolicyId: azureAdB2cResetPolicyId
+    azureAdB2cSignoutCallback: azureAdB2cSignoutCallback
+    azureAdB2cSignupSigninPolicyId: azureAdB2cSignupSigninPolicyId
+    azureAdB2cTenantId: azureAdB2cTenantId
+    frontEndAzureAdB2CApiScope: frontEndAzureAdB2CApiScope
+    frontEndAzureAdB2cClientId: frontEndAzureAdB2cClientId
+    frontEndAzureAdB2cClientSecret: frontEndAzureAdB2cClientSecret
   }
 }
 
