@@ -28,7 +28,7 @@
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientId)"
     },
     "frontEndAzureAdB2cClientSecret": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cClientSecret)"
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientSecret)"
     },
 
     "apiAzureAdB2cClientId": {
