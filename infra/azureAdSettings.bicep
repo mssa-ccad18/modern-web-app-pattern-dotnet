@@ -145,14 +145,14 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
   }
 
   resource appConfigSvcApiAzureAdB2cTenantId 'keyValues@2022-05-01' = {
-    name: 'Api:AAzureAdB2C:TenantId'
+    name: 'Api:AzureAdB2C:TenantId'
     properties: {
       value: azureAdB2cTenantId
     }
   }
 
   resource appConfigSvcApiAzureAdB2cSignupSigninPolicyId 'keyValues@2022-05-01' = {
-    name: 'Api:AAzureAdB2C:SignUpSignInPolicyId'
+    name: 'Api:AzureAdB2C:SignUpSignInPolicyId'
     properties: {
       value: azureAdB2cSignupSigninPolicyId
     }
