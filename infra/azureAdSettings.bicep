@@ -138,7 +138,7 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
   }
 
   resource appConfigSvcApiAzureAdB2cInstance 'keyValues@2022-05-01' = {
-    name: 'Api:AAzureAdB2C:Instance'
+    name: 'Api:AzureAdB2C:Instance'
     properties: {
       value: azureAdB2cInstance
     }
