@@ -151,6 +151,17 @@ resource baseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurationSto
   ]
 }
 
+resource pubAppBaseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
+  parent: appConfigSvc
+  name: 'PubApp:RelecloudApi:BaseUri'
+  properties: {
+    value: 'https://${publicApi.properties.defaultHostName}'
+  }
+  dependsOn: [
+    openConfigSvcsForEdits
+  ]
+}
+
 resource sqlConnStrAppConfigSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
   parent: appConfigSvc
   name: 'App:SqlDatabase:ConnectionString'
