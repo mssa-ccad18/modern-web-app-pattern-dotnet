@@ -19,6 +19,40 @@
     },
     "azureSqlPassword": {
       "value": "${AZURE_SQL_PASSWORD}"
+    },
+
+    "frontEndAzureAdB2CApiScope": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2CApiScope)"
+    },
+    "frontEndAzureAdB2cClientId": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientId)"
+    },
+    "frontEndAzureAdB2cClientSecret": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientSecret)"
+    },
+
+    "apiAzureAdB2cClientId": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} apiAzureAdB2cClientId)"
+    },
+
+    "azureAdB2cDomain": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cDomain)"
+    },
+    "azureAdB2cInstance": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cInstance)"
+    },
+    "azureAdB2cTenantId": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cTenantId)"
+    },
+    "azureAdB2cSignupSigninPolicyId": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cSignupSigninPolicyId)"
+    },
+    "azureAdB2cResetPolicyId": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cResetPolicyId)"
+    },
+    "azureAdB2cSignoutCallback": {
+      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cSignoutCallback)"
     }
+
   }
 }

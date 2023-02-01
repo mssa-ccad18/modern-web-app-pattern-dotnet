@@ -58,7 +58,7 @@ $appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name"
 
 
 $appServiceRootUri = 'azurewebsites.net' # hard coded because app svc does not return the public endpoint
-$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web' ].name" -o tsv)
+$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web-call-center' ].name" -o tsv)
 $frontEndWebAppUri = "https://$frontEndWebAppName.$appServiceRootUri"
 
 $resourceToken = $frontEndWebAppName.substring(4, 13)
@@ -105,7 +105,7 @@ Write-Debug ""
 
 # Resolves permission constraint that prevents the deploymentScript from running this command
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
-Set-AzSqlServer -ServerName $mySqlServer -PublicNetworkAccess 'disabled' -ResourceGroupName $ResourceGroupName > $null
+az sql server update -n $mySqlServer -g $ResourceGroupName --set publicNetworkAccess="Disabled" > $null
 
 $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
 

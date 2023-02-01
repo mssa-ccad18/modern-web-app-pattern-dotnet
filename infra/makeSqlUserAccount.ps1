@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Will make the SQL user account required to authenticate with Azure AD to Azure SQL Database.
+  Will make the SQL user account required to authenticate with Azure AD to Azure SQL Database.
 .DESCRIPTION
-  Placeholder
+  Will make the SQL user account required to authenticate with Azure AD to Azure SQL Database.
 
   <This command should only be run after using the azd command to deploy resources to Azure>
 .PARAMETER ResourceGroupName
-    Name of resource group containing the environment that was created by the azd command..
+  Name of resource group containing the environment that was created by the azd command.
 #>
 
 Param(

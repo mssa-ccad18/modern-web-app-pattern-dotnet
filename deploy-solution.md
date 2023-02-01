@@ -39,16 +39,20 @@ This reference implementation provides you with the instructions and templates y
     dotnet --version
     ```
 
+1. [Create Azure AD B2C App Registrations](create-AADB2C-app-registrations.md)
+    This app sample deploys a public facing web app secured by Azure AD B2C. There are no automation steps
+    available for this step, please visit the doc to learn more about this pre-req step.
+
 ## Get the code
 
 Please clone the repo to get started.
 
 ```
-git clone https://github.com/Azure/reliable-web-app-pattern-dotnet
+git clone https://github.com/Azure/modern-web-app-pattern-dotnet
 ```
 
 And switch to the folder so that `azd` will recognize the solution.
 
 ```
-cd reliable-web-app-pattern-dotnet
+cd modern-web-app-pattern-dotnet
 ```
