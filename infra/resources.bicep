@@ -30,7 +30,7 @@ param uniqueScriptId string = newGuid()
 @description('Built in \'Data Reader\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
 var appConfigurationRoleDefinitionId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 
-// these AADB2C settings are also documented in the create-AADB2C-app-registrations.md.md. Please keep both locations in sync
+// these AADB2C settings are also documented in the create-AADB2C-app-registrations.md. Please keep both locations in sync
 
 @minLength(1)
 @description('A scope used by the front-end public web app to get authorized access to the public web api. Looks similar to https://myb2ctestorg.onmicrosoft.com/fbb6ce3b-c65f-4708-ae94-5069d1f821b4/Attendee')

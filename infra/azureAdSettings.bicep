@@ -7,7 +7,7 @@ param keyVaultName string
 @description('The name of the Azure App Configuration Service that will store AAD secrets for the web app')
 param appConfigurationServiceName string
 
-// these AADB2C settings are also documented in the create-AADB2C-app-registrations.md.md. Please keep both locations in sync
+// these AADB2C settings are also documented in the create-AADB2C-app-registrations.md. Please keep both locations in sync
 
 @minLength(1)
 @description('A scope used by the front-end public web app to get authorized access to the public web api. Looks similar to https://myb2ctestorg.onmicrosoft.com/fbb6ce3b-c65f-4708-ae94-5069d1f821b4/Attendee')
