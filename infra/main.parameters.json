@@ -53,6 +53,5 @@
     "azureAdB2cSignoutCallback": {
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cSignoutCallback)"
     }
-
   }
 }

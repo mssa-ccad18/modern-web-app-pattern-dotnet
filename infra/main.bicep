@@ -166,6 +166,23 @@ module azureFrontDoor './azureFrontDoor.bicep' = if (isMultiLocationDeployment) 
   }
 }
 
+@description('Enable usage and telemetry feedback to Microsoft.')
+param enableTelemetry bool = true
+
+var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba-${location}'
+resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
+  name: telemetryId
+  location: location
+  properties: {
+    mode: 'Incremental'
+    template: {
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+      contentVersion: '1.0.0.0'
+      resources: {}
+    }
+  }
+}
+
 output WEB_URI string = isMultiLocationDeployment ? azureFrontDoor.outputs.WEB_URI : primaryResources.outputs.WEB_CALLCENTER_URI
 output AZURE_LOCATION string = location
 
