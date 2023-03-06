@@ -4,7 +4,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationInsightsResourceId>/subscriptions/02d31b67-afd1-4bac-81bc-5ca6a7cd37af/resourceGroups/rgReleCloudConcerts/providers/microsoft.insights/components/relecloudconcertsb2cdev</ApplicationInsightsResourceId>
     <UserSecretsId>84cb1fc0-d186-426d-92d1-0e6c320698e6</UserSecretsId>
   </PropertyGroup>
 
