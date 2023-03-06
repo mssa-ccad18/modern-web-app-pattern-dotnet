@@ -1,6 +1,6 @@
 # Modern Web App Pattern
 
-> Disclaimer: this repository is under active development. we are not accepting issues at this time. As we work through the engineering phase this content is not yet expected to be deployable.
+> Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content is not yet expected to be deployable.
 
 This repository provides resources to help developers build a Modern web app on Azure. A Modern Web App is a set of services, code, and infrastructure deployed in Azure that applies practices from the Well-Architected Framework. This pattern is designed to help you build a web app that follows Microsoft's recommended guidance for achieving reliability, scalability, and security in the cloud.
 
