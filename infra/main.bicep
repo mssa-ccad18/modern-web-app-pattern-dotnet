@@ -15,6 +15,9 @@ param principalId string = ''
 @description('Will select production ready SKUs when `true`')
 param isProd string = 'false'
 
+@description('Defines type of principal that is executing the template')
+param isRunAsServicePrincipal bool = false
+
 @description('Should specify an Azure region, if not set to none, to trigger multiregional deployment. The second region should be different than the `location` . e.g. `westus3`')
 param secondaryAzureLocation string
 
@@ -114,6 +117,7 @@ module primaryResources './resources.bicep' = {
     azureSqlPassword: azureSqlPassword
     devOpsManagedIdentityId: devOpsIdentitySetup.outputs.devOpsManagedIdentityId
     isProd: isProdBool
+    isRunAsServicePrincipal: isRunAsServicePrincipal
     location: location
     principalId: principalId
     resourceToken: primaryResourceToken
@@ -138,6 +142,7 @@ module secondaryResources './resources.bicep' = if (isMultiLocationDeployment) {
     azureSqlPassword: azureSqlPassword
     devOpsManagedIdentityId: devOpsIdentitySetup.outputs.devOpsManagedIdentityId
     isProd: isProdBool
+    isRunAsServicePrincipal: isRunAsServicePrincipal
     location: secondaryAzureLocation
     principalId: principalId
     resourceToken: secondaryResourceToken
