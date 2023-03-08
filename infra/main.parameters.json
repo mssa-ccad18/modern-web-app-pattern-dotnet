@@ -17,8 +17,8 @@
     "isProd": {
       "value": "${IS_PROD}"
     },
-    "grantUserKVSecretOfficerRBAC": {
-      "value": "${GRANT_USER_KEYVAULT_RBAC=false}"
+    "grantUserKVSecretOfficerRole": {
+      "value": "${GRANT_USER_KEYVAULT_ROLE=false}"
     },
     "azureSqlPassword": {
       "value": "${AZURE_SQL_PASSWORD}"

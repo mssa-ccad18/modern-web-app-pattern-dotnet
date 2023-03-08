@@ -16,7 +16,7 @@ param principalId string = ''
 param isProd string = 'false'
 
 @description('Enables the template to apply elevated Key Vault role assignment for interactive user')
-param grantUserKVSecretOfficerRBAC bool = false
+param grantUserKVSecretOfficerRole bool = false
 
 @description('Should specify an Azure region, if not set to none, to trigger multiregional deployment. The second region should be different than the `location` . e.g. `westus3`')
 param secondaryAzureLocation string
@@ -117,7 +117,7 @@ module primaryResources './resources.bicep' = {
     azureSqlPassword: azureSqlPassword
     devOpsManagedIdentityId: devOpsIdentitySetup.outputs.devOpsManagedIdentityId
     isProd: isProdBool
-    grantUserKVSecretOfficerRBAC: grantUserKVSecretOfficerRBAC
+    grantUserKVSecretOfficerRole: grantUserKVSecretOfficerRole
     location: location
     principalId: principalId
     resourceToken: primaryResourceToken
@@ -142,7 +142,7 @@ module secondaryResources './resources.bicep' = if (isMultiLocationDeployment) {
     azureSqlPassword: azureSqlPassword
     devOpsManagedIdentityId: devOpsIdentitySetup.outputs.devOpsManagedIdentityId
     isProd: isProdBool
-    grantUserKVSecretOfficerRBAC: grantUserKVSecretOfficerRBAC
+    grantUserKVSecretOfficerRole: grantUserKVSecretOfficerRole
     location: secondaryAzureLocation
     principalId: principalId
     resourceToken: secondaryResourceToken

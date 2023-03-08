@@ -110,11 +110,7 @@ frontEndWebObjectId=$(az ad app list --filter "displayName eq '$frontEndWebAppNa
 
 if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
 
-    # quietly: grant the current user secrets management access to Key Vault so we can set keys
-    az keyvault set-policy -n $keyVaultName --secret-permissions all --object-id $userObjectId &> /dev/null
-
-    # this web app doesn't exist and must be creaed
-    
+    # this web app doesn't exist and must be created    
     frontEndWebAppClientId=$(az ad app create \
         --display-name $frontEndWebAppName \
         --sign-in-audience AzureADMyOrg \

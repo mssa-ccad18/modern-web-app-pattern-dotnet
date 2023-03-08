@@ -2,7 +2,7 @@
 param isProd bool
 
 @description('Enables the template to apply elevated Key Vault role assignment for interactive user')
-param grantUserKVSecretOfficerRBAC bool
+param grantUserKVSecretOfficerRole bool
 
 @description('The id for the user-assigned managed identity that runs deploymentScripts')
 param devOpsManagedIdentityId string
@@ -108,7 +108,7 @@ resource roleAssignmentKVSecretsUserForManagedIdentity 'Microsoft.Authorization/
 }
 
 @description('Grant the \'Key Vault Secrets Officer\' role to Interactive User, at the scope of the resource group.')
-resource roleAssignmentKVSecretsOfficerForInteractiveUser 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (grantUserKVSecretOfficerRBAC) {
+resource roleAssignmentKVSecretsOfficerForInteractiveUser 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (grantUserKVSecretOfficerRole) {
   name: guid(resourceGroup().id, principalId, kvSecretsOfficerRoleDefinitionId)
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', kvSecretsOfficerRoleDefinitionId)
