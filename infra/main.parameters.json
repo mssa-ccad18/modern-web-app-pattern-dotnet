@@ -17,8 +17,8 @@
     "isProd": {
       "value": "${IS_PROD}"
     },
-    "grantUserKVSecretOfficerRole": {
-      "value": "${GRANT_USER_KEYVAULT_ROLE=false}"
+    "isRunAsServicePrincipal": {
+      "value": "${IS_RUN_AS_SERVICEPRINCIPAL=false}"
     },
     "azureSqlPassword": {
       "value": "${AZURE_SQL_PASSWORD}"
@@ -32,11 +32,9 @@
     "frontEndAzureAdB2cClientSecret": {
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientSecret)"
     },
-
     "apiAzureAdB2cClientId": {
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} apiAzureAdB2cClientId)"
     },
-
     "azureAdB2cDomain": {
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cDomain)"
     },
