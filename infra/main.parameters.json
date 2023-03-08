@@ -17,10 +17,12 @@
     "isProd": {
       "value": "${IS_PROD}"
     },
+    "grantUserKVSecretOfficerRBAC": {
+      "value": "${GRANT_USER_KEYVAULT_RBAC=false}"
+    },
     "azureSqlPassword": {
       "value": "${AZURE_SQL_PASSWORD}"
     },
-
     "frontEndAzureAdB2CApiScope": {
       "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2CApiScope)"
     },
