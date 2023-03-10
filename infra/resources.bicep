@@ -521,6 +521,9 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
   sku: {
     name: 'Standard'
   }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
 }
 
 var appServicePlanSku = (isProd) ? 'P1v2' : 'B1'
@@ -926,126 +929,6 @@ resource redisPvtEndpointDnsGroupName 'Microsoft.Network/privateEndpoints/privat
         name: 'config1'
         properties: {
           privateDnsZoneId: redisSetup.outputs.privateDnsZoneId
-        }
-      }
-    ]
-  }
-}
-
-// private link for Key vault
-
-resource privateDnsZoneNameForKv 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.vaultcore.azure.net'
-  location: 'global'
-  tags: tags
-  dependsOn: [
-    vnet
-  ]
-}
-
-resource privateDnsZoneNameForKv_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: privateDnsZoneNameForKv
-  name: '${privateDnsZoneNameForKv.name}-link'
-  location: 'global'
-  tags: tags
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
-    }
-  }
-}
-
-resource pvtEndpointDnsGroupNameForKv 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-07-01' = {
-  name: '${privateEndpointForKv.name}/mydnsgroupname'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'config1'
-        properties: {
-          privateDnsZoneId: privateDnsZoneNameForKv.id
-        }
-      }
-    ]
-  }
-}
-
-resource privateEndpointForKv 'Microsoft.Network/privateEndpoints@2020-07-01' = {
-  name: 'privateEndpointForKv'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, privateEndpointSubnetName)
-    }
-    privateLinkServiceConnections: [
-      {
-        name: kv.name
-        properties: {
-          privateLinkServiceId: kv.id
-          groupIds: [
-            'vault'
-          ]
-        }
-      }
-    ]
-  }
-}
-
-// private link for App Config Svc
-
-resource privateDnsZoneNameForAppConfig 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.azconfig.io'
-  location: 'global'
-  tags: tags
-  dependsOn: [
-    vnet
-  ]
-}
-
-resource privateDnsZoneNameForAppConfig_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: privateDnsZoneNameForAppConfig
-  name: '${privateDnsZoneNameForAppConfig.name}-link'
-  location: 'global'
-  tags: tags
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
-    }
-  }
-}
-
-resource pvtEndpointDnsGroupNameForAppConfig 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-07-01' = {
-  name: '${privateEndpointForAppConfig.name}/mydnsgroupname'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'config1'
-        properties: {
-          privateDnsZoneId: privateDnsZoneNameForAppConfig.id
-        }
-      }
-    ]
-  }
-}
-
-resource privateEndpointForAppConfig 'Microsoft.Network/privateEndpoints@2020-07-01' = {
-  name: 'privateEndpointForAppConfig'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, privateEndpointSubnetName)
-    }
-    privateLinkServiceConnections: [
-      {
-        name: appConfigSvc.name
-        properties: {
-          privateLinkServiceId: appConfigSvc.id
-          groupIds: [
-            'configurationStores'
-          ]
         }
       }
     ]
