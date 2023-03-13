@@ -522,6 +522,11 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
     name: 'Standard'
   }
   properties: {
+    // This network mode supports making the sample easier to get started
+    // It uses public network access because the values are set by the Azure Resource Provider
+    // by this declarative bicep file. To disable public network access would require
+    // access to the vnet and connecting over the private endpoint
+    // https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/230
     publicNetworkAccess: 'Enabled'
   }
 }
