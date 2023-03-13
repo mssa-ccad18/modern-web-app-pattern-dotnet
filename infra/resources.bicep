@@ -935,6 +935,66 @@ resource redisPvtEndpointDnsGroupName 'Microsoft.Network/privateEndpoints/privat
   }
 }
 
+// private link for Key vault
+
+resource privateDnsZoneNameForKv 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+  tags: tags
+  dependsOn: [
+    vnet
+  ]
+}
+
+resource privateDnsZoneNameForKv_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateDnsZoneNameForKv
+  name: '${privateDnsZoneNameForKv.name}-link'
+  location: 'global'
+  tags: tags
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+resource pvtEndpointDnsGroupNameForKv 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-07-01' = {
+  name: '${privateEndpointForKv.name}/mydnsgroupname'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config1'
+        properties: {
+          privateDnsZoneId: privateDnsZoneNameForKv.id
+        }
+      }
+    ]
+  }
+}
+
+resource privateEndpointForKv 'Microsoft.Network/privateEndpoints@2020-07-01' = {
+  name: 'privateEndpointForKv'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, privateEndpointSubnetName)
+    }
+    privateLinkServiceConnections: [
+      {
+        name: kv.name
+        properties: {
+          privateLinkServiceId: kv.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
 output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
 output WEB_CALLCENTER_URI string = callcenterWeb.properties.defaultHostName
 output PUBLIC_API_URI string = publicApi.properties.defaultHostName
