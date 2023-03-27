@@ -11,6 +11,7 @@ To allow your GitHub Actions to perform deployments from your main branch, perfo
 2. Clone your repository locally and navigate to the repository directory.
 3. Run the following azd commands. Update `<PrincipalName>` to match your desired Service Principal name.
 ```azurecli
+azd pipeline config --principal-name <PrincipalName>
 azd pipeline config --principal-name <PrincipalName> --principal-role "User Access Administrator"
 ```
 1. Execute the following az cli commands to add additional trusts to allow deployment from GitHub environments named "QA" and "PROD". Update `<PrincipalName>` and `<REPO>` to match your GitHub repository, the REPO should be set to: GitHub_Organization/Repository_Name, an example for this repository would be: `Azure/modern-web-app-pattern-dotnet`.
