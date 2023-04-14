@@ -1,6 +1,6 @@
 name: "MWA- Daily Build"
 on:
-  workflow_dispatch:
+  pull_request:
     inputs:
       run_tear_down:
         description: 'When true, resources will be deleted after a run'
