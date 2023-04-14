@@ -33,7 +33,10 @@ jobs:
 
       - name: Log in with azd (Federated Credentials)
         run: |
-          azd auth login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+          azd auth login \
+            --client-id ${{ secrets.AZURE_CLIENT_ID }} \
+            --federated-credential-provider "github" \
+            --tenant-id ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Azure Dev Provision
         run: azd provision --no-prompt
