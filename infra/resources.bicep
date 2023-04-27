@@ -129,18 +129,25 @@ resource roleAssignmentKVSecretsOfficerForInteractiveUser 'Microsoft.Authorizati
   }
 }
 
+// for non-prod scenarios we allow public network connections for the local dev experience
+var keyVaultPublicNetworkAccess = isProd ? 'disabled' : 'enabled'
+
 resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   name: 'rc-${resourceToken}-kv' // keyvault name cannot start with a number
   location: location
   tags: tags
   properties: {
+    publicNetworkAccess: keyVaultPublicNetworkAccess
+    networkAcls:{
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
+    enableRbacAuthorization: true
     sku: {
       family: 'A'
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    accessPolicies: []
-    enableRbacAuthorization: true
   }
   resource kvAzureAdClientSecret 'secrets@2021-11-01-preview' = {
     name: frontEndClientSecretName
