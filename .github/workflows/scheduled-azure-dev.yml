@@ -20,9 +20,7 @@ permissions:
   id-token: write
   contents: read
 
-concurrency:
-  my-concurrency-key:
-    limit: 1
+concurrency: integration_testing
     
 jobs:
   build:
