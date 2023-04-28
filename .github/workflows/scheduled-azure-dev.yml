@@ -20,6 +20,10 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  my-concurrency-key:
+    limit: 1
+    
 jobs:
   build:
     runs-on: ubuntu-latest
