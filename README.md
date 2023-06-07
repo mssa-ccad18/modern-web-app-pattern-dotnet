@@ -1,4 +1,4 @@
-> Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content is not yet expected to be deployable.
+> Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content may not be functional.
 
 # Modern web app pattern for .NET
 
@@ -242,7 +242,6 @@ pwsh -c "Set-ExecutionPolicy Bypass Process; .\infra\createAppRegistrations.ps1 
 <td>
 
 ```bash
-chmod +x ./infra/createAppRegistrations.sh
 ./infra/createAppRegistrations.sh -g "$myEnvironmentName-rg"
 ```
 
@@ -360,7 +359,6 @@ New team members should setup their environment by following these steps.
         <td>
                 
         ```bash
-        chmod +x ./infra/localDevScripts/getSecretsForLocalDev.sh
         ./infra/localDevScripts/getSecretsForLocalDev.sh -g "$myEnvironmentName-rg" --web
         ```
 
@@ -424,7 +422,6 @@ New team members should setup their environment by following these steps.
     <td>
             
     ```bash
-    chmod +x ./infra/localDevScripts/addLocalIPToSqlFirewall.sh
     ./infra/localDevScripts/addLocalIPToSqlFirewall.sh -g "$myEnvironmentName-rg"
     ```
 
@@ -451,7 +448,6 @@ Run the following command to give your Azure AD account permission to access the
     <td>
             
     ```bash
-    chmod +x ./infra/localDevScripts/makeSqlUserAccount.sh
     ./infra/localDevScripts/makeSqlUserAccount.sh -g "$myEnvironmentName-rg"
     ```
 

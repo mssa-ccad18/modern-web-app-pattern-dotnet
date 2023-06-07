@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Azure.LoadTest.Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "--environment-name releclouddev3 --debug",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

@@ -46,8 +46,7 @@ jobs:
         run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
 
       - name: Azure QA Deploy
-        run: |
-            azd deploy --no-prompt
+        run: azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
