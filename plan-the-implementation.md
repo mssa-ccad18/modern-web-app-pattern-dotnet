@@ -1,4 +1,10 @@
-# Business scenario
+# Placeholder
+
+⚠️ Pending Work Item: 1864743
+
+## Business scenario
+
+* Todo - pending review
 
 This guide demonstrates how principles from the [Well-Architected Framework](https://docs.microsoft.com/azure/architecture/framework/)
 and [Twelve-Factor Applications](https://12factor.net/) can be applied to migrate and modernize a legacy, line-of-business (LOB) web app to the cloud. A reference architecture is included to showcase a production ready solution which can be easily deployed for learning and experimentation.
@@ -12,6 +18,3 @@ Their call center employee website is a monolithic ASP.NET application with a Mi
 In this phase Relecloud will achieve their intermediate goals such as opening the application directly to online customers through multiple web and mobile experiences, improving availability targets, and scaling different components of the system independently to handle traffic spikes without compromising security. Their goal of significantly reducing the time required to deliver new features to the application will be addressed in the next phase of their journey. In this phase they will build on the Azure solution they have deployed to augment their existing solution with Azure's robust global platform and tremendous managed service capabilities that will support Relecloud's growth objectives for years to come.
 
 Continue to the next section to learn more about the solution architecture, and the recommendations they applied to achieve their goals.
-
-## Next Step
-- [Read the reference architecture](modern-web-app.md)
