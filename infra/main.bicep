@@ -44,10 +44,12 @@ param principalType string = 'ServicePrincipal'
 ** Passwords - specify these!
 */
 @secure()
-@minLength(8)
+@minLength(12)
 @description('The password for the jump host administrator account.')
 param administratorPassword string = newGuid()
 
+@secure()
+param administratorPasswordParam string = ''
 
 @secure()
 @minLength(8)
@@ -119,6 +121,9 @@ param useCommonAppServicePlan string = 'auto'
 // ========================================================================
 // VARIABLES
 // ========================================================================
+
+// initializes the database password to a GUID and allows an override with the AZD env var administratorPasswordParam
+var administratorPasswordValue = length(administratorPasswordParam) > 0 ? administratorPasswordParam : administratorPassword
 
 var prefix = '${environmentName}-${environmentType}'
 
@@ -272,7 +277,7 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
-    administratorPassword: administratorPassword
+    administratorPassword: administratorPasswordValue
     administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
@@ -308,7 +313,7 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
 
     // Settings
     addressPrefix: spokeAddressPrefixPrimary
-    administratorPassword: administratorPassword
+    administratorPassword: administratorPasswordValue
     administratorUsername: administratorUsername
     createDevopsSubnet: isNetworkIsolated
     enableJumpHost: true
@@ -331,7 +336,7 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
 
     // Settings
     addressPrefix: spokeAddressPrefixSecondary
-    administratorPassword: administratorPassword
+    administratorPassword: administratorPasswordValue
     administratorUsername: administratorUsername
     createDevopsSubnet: true
     enableJumpHost: true
@@ -475,7 +480,7 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
 
     // Settings
-    administratorPassword: administratorPassword
+    administratorPassword: administratorPasswordValue
     administratorUsername: administratorUsername
     adoOrganizationUrl: adoOrganizationUrl
     adoToken: adoToken
