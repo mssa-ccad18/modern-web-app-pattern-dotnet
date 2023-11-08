@@ -277,8 +277,6 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
-    administratorPassword: administratorPasswordValue
-    administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
     enableFirewall: true
@@ -460,8 +458,25 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
   dependsOn: [
     resourceGroups2
     spokeNetwork2
-    privateDnsZones
   ]
+}
+
+module workloadPostConfiguration './modules/workload-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
+  name: '${prefix}-workload-postconfig'
+  params: {
+    deploymentSettings: deploymentSettings
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
+    databasePassword: databasePassword
+    hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
+    keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
+    readerIdentities: union(workload.outputs.service_managed_identities, deploymentSettings.isMultiLocationDeployment ? workload2.outputs.service_managed_identities : [])
+    redisCacheNamePrimary: workload.outputs.redis_cache_name
+    redisCacheNameSecondary: isMultiLocationDeployment ? workload2.outputs.redis_cache_name : workload.outputs.redis_cache_name
+    resourceNames: naming.outputs.resourceNames
+    workloadResourceGroupNamePrimary: resourceGroups.outputs.workload_resource_group_name
+    workloadResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.workload_resource_group_name : ''
+  }
 }
 
 /*
@@ -486,28 +501,6 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
     adoToken: adoToken
     githubRepositoryUrl: githubRepositoryUrl
     githubToken: githubToken
-  }
-}
-
-var virtualNetworkLinks = [
-  {
-    vnetName: hubNetwork.outputs.virtual_network_name
-    vnetId: hubNetwork.outputs.virtual_network_id
-    registrationEnabled: false
-  }
-  {
-    vnetName: spokeNetwork.outputs.virtual_network_name
-    vnetId: spokeNetwork.outputs.virtual_network_id
-    registrationEnabled: false
-  }
-]
-
-module privateDnsZones './modules/private-dns-zones.bicep' = if (willDeployHubNetwork) {
-  name: '${prefix}-private-dns-zone-deploy'
-  params:{
-    deploymentSettings: deploymentSettings
-    hubResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
-    virtualNetworkLinks: willDeployHubNetwork ? virtualNetworkLinks : []
   }
 }
 
