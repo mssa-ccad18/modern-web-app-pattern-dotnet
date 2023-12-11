@@ -238,25 +238,6 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
   }
 }
 
-module writeAppConfigValues './app-config-values.bicep' = {
-  name: 'scripted-write-app-config-store-values'
-  scope: resourceGroup
-  params: {
-    azureFrontDoorHostName: frontDoorSettings.hostname
-    azureStorageTicketContainerName: ticketContainerName
-    azureStorageTicketUri:storageAccount.outputs.primaryEndpoints.blob
-    appConfigurationStoreName: appConfiguration.outputs.name
-    devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
-    enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
-    keyVaultName: resourceNames.keyVault
-    location: deploymentSettings.location
-    relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
-    redisConnectionSecretName: redisConnectionSecretName
-    sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
-    tags: moduleTags
-  }
-}
-
 /*
 ** Key Vault - used for storing configuration secrets.
 ** This vault is deployed with the application when not using Network Isolation.
@@ -339,19 +320,6 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     } : null
     sku: deploymentSettings.isProduction ? 'Premium' : 'Standard'
     zoneRedundant: deploymentSettings.isProduction
-  }
-}
-
-/* write secrets to the KV in the application resource group when appropriate */
-module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = if (!deploymentSettings.isNetworkIsolated) {
-  name: 'write-sql-admin-info-to-keyvault'
-  scope: resourceGroup
-  params: {
-    name: !deploymentSettings.isNetworkIsolated ? keyVault.outputs.name : ''
-    secrets: [
-      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
-    ]
   }
 }
 

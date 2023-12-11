@@ -157,15 +157,20 @@ var defaultDeploymentSettings = {
 
 var primaryDeployment = {
   workloadTags: {
+    IsPrimaryLocation: 'true'
     ResourceToken: naming.outputs.resourceToken
+    HubGroupName: isNetworkIsolated ? naming.outputs.resourceNames.hubResourceGroup : naming.outputs.resourceNames.resourceGroup
   }
 }
+
 var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployment)
 
 var secondDeployment = {
   isPrimaryLocation: false
   workloadTags: {
+    IsPrimaryLocation: 'false'
     ResourceToken: naming2.outputs.resourceToken
+    HubGroupName: isNetworkIsolated ? naming.outputs.resourceNames.hubResourceGroup : ''
   }
 }
 
@@ -467,15 +472,18 @@ module application2 './modules/application-resources.bicep' =  if (isMultiLocati
   ]
 }
 
-module applicationPostConfiguration './modules/application-post-config.bicep' = if (defaultDeploymentSettings.isNetworkIsolated) {
+/*
+** Runs for all configurations (NotIsolated, Isolated, and MultiLocation)
+*/
+module applicationPostConfiguration './modules/application-post-config.bicep' = {
   name: '${prefix}-application-postconfig'
   params: {
     deploymentSettings: primaryDeploymentSettings
     administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
-    hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
+    kvResourceGroupName: isNetworkIsolated? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.application_resource_group_name
     readerIdentities: union(application.outputs.service_managed_identities, defaultDeploymentSettings.isMultiLocationDeployment ? application2.outputs.service_managed_identities : [])
     redisCacheNamePrimary: application.outputs.redis_cache_name
     redisCacheNameSecondary: isMultiLocationDeployment ? application2.outputs.redis_cache_name : application.outputs.redis_cache_name

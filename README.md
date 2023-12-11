@@ -48,7 +48,7 @@ For users familiar with the deployment process, you can use the following list o
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
-azd env new eapdotnetmwa
+azd env new dotnetwebapp
 azd env set AZURE_LOCATION westus3
 azd up
 ```
@@ -88,19 +88,25 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 ### 3. Create a new environment
 
-The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
+The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `dotnetwebapp`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
+
+If not using PowerShell 7+, run the following command:
+
+```shell
+pwsh
+```
 
 Run the following commands to set these values and create a new environment:
 
-```shell
-azd env new eapdotnetmwa
+```pwsh
+azd env new dotnetwebapp
 ```
 
-Substitute the environment name and database password for your own values.
+Substitute the environment name with your own value.
 
 By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following code:
 
-```shell
+```pwsh
 azd env set AZURE_ENV_TYPE prod
 ```
 
@@ -108,31 +114,34 @@ azd env set AZURE_ENV_TYPE prod
 
 Before deploying, you must be authenticated to Azure and have the appropriate subscription selected.  To authenticate:
 
-```shell
-az login --scope https://graph.microsoft.com//.default
+```pwsh
 azd auth login
+```
+
+```pwsh
+Connect-AzAccount
 ```
 
 Each command will open a browser allowing you to authenticate.  To list the subscriptions you have access to:
 
-```shell
-az account list
+```pwsh
+Get-AzSubscription
 ```
 
 To set the active subscription:
 
-```shell
-export AZURE_SUBSCRIPTION="<your-subscription-id>"
-az account set --subscription $AZURE_SUBSCRIPTION
-azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION
+```pwsh
+$AZURE_SUBSCRIPTION_ID="<your-subscription-id>"
+azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION_ID
+Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION_ID
 ```
 
 ### 5. Select a region for deployment
 
 The application can be deployed in either a single region or multi-region manner. You can find a list of available Azure regions by running the following Azure CLI command.
 
-> ```shell
-> az account list-locations --query "[].name" -o tsv
+> ```pwsh
+> (Get-AzLocation).Location
 > ```
 
 Set the `AZURE_LOCATION` to the primary region:
@@ -147,7 +156,7 @@ If doing a multi-region deployment, set the `AZURE_LOCATION2` to the secondary r
 azd env set AZURE_LOCATION2 eastus
 ```
 
-Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
+Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support some Azure features; for example, [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
 
 | AZURE_LOCATION | AZURE_LOCATION2 |
 | ----- | ----- |
@@ -159,7 +168,7 @@ Make sure the secondary region is a paired region with the primary region (`AZUR
 
 Run the following command to create the infrastructure (about 15-minutes to provision):
 
-```shell
+```pwsh
 azd provision --no-prompt
 ```
 
@@ -174,7 +183,15 @@ App Configuration so that the web app can read this data
 (about 3-minutes to register).
 
 ```sh
-./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for application resource group>'
+./infra/scripts/postprovision/call-create-app-registrations.sh
+```
+
+**Set Configuration**
+
+Relecloud devs have automated the process of configuring the environment.
+
+```sh
+./infra/scripts/predeploy/call-set-app-configuration.sh
 ```
 
 ### 7. Deploy the application

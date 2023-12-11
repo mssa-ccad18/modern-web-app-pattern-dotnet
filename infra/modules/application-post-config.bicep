@@ -87,8 +87,8 @@ param resourceNames object
 @description('The resource names for the resources to be created.')
 param keyVaultName string
 
-@description('Name of the hub resource group.')
-param hubResourceGroupName string
+@description('Name of the hub resource group containing the key vault.')
+param kvResourceGroupName string
 
 @description('Name of the primary Azure Cache for Redis.')
 param redisCacheNamePrimary string
@@ -109,33 +109,41 @@ param readerIdentities object[]
 // VARIABLES
 // ========================================================================
 
-var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
-var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
-var azureAdClientSecret = 'AzureAd--ClientSecret'
-var azureAdTenantId = 'AzureAd--TenantId'
-var azureAdClientId = 'AzureAd--ClientId'
+var azureAdApiClientId = 'Api--AzureAd--ClientId'
+var azureAdApiInstance = 'Api--AzureAd--Instance'
 var azureAdApiScope = 'App--RelecloudApi--AttendeeScope'
 var azureAdApiTenantId = 'Api--AzureAd--TenantId'
-var azureAdApiClientId = 'Api--AzureAd--ClientId'
+var azureAdCallbackPath = 'AzureAd--CallbackPath'
+var azureAdClientId = 'AzureAd--ClientId'
+var azureAdClientSecret = 'AzureAd--ClientSecret'
+var azureAdInstance = 'AzureAd--Instance'
+var azureAdSignedOutCallbackPath = 'AzureAd--SignedOutCallbackPath'
+var azureAdTenantId = 'AzureAd--TenantId'
+var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
+var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
 
 var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
 
 var listOfSecretNames = union([
-    redisCacheSecretNamePrimary
-    azureAdClientSecret
-    azureAdTenantId
-    azureAdClientId
+    azureAdApiClientId
+    azureAdApiInstance
     azureAdApiScope
     azureAdApiTenantId
-    azureAdApiClientId
+    azureAdCallbackPath
+    azureAdClientId
+    azureAdClientSecret
+    azureAdInstance
+    azureAdSignedOutCallbackPath
+    azureAdTenantId
+    redisCacheSecretNamePrimary
   ], multiRegionalSecrets)
 
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
 
-resource existingHubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: hubResourceGroupName
+resource existingKvResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: kvResourceGroupName
 }
 
 resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing = {
@@ -150,7 +158,7 @@ resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: keyVaultName
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
 }
 
 // ========================================================================
@@ -159,7 +167,7 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
 
 module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: 'hub-write-jumphost-credentials'
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
@@ -172,7 +180,7 @@ module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bi
 
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
@@ -184,7 +192,7 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
 
 module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
   name: 'write-primary-redis-secret-to-keyvault'
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
@@ -195,7 +203,7 @@ module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
 
 module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
   name: 'write-secondary-redis-secret-to-keyvault'
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
@@ -209,7 +217,7 @@ module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if
 // ======================================================================== //
 module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for secretName in listOfSecretNames: {
   name: 'write-temp-kv-secret-${secretName}'
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
@@ -223,7 +231,7 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 // ======================================================================== //
 
 module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
-  scope: existingHubResourceGroup
+  scope: existingKvResourceGroup
   name: 'grant-kv-access-for-${secretName}'
   params: {
     keyVaultName: existingKeyVault.name

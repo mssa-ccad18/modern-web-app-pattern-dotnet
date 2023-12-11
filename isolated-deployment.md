@@ -17,12 +17,12 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 ## Steps to deploy the reference implementation
 
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
+For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have selected a suitable subscription and have logged into both the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/reference#azd-auth-login) and a PowerShell 7+ [AzContext](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
-azd env new eapdotnetmwa
+azd env new dotnetwebapp
 azd env set NETWORK_ISOLATION true
 azd env set DEPLOY_HUB_NETWORK true
 azd env set COMMON_APP_SERVICE_PLAN false
@@ -36,6 +36,24 @@ Provision the Azure resources (about 55-minutes to provision):
 ```shell
 azd provision
 ```
+
+> **WARNING**
+>
+> Your organization may not allow the creation of Entra ID application registrations unless the host is joined
+> to a domain, InTune managed, or meets other security requirements.  If your organization has such security
+> requirements, be sure to run the create-app-registrations from your dev workstation.
+>
+> Microsoft employees:
+>
+> - Create the Entra application registrations from the same system that you used to initially provision resources.
+> - The other actions (such as azd deploy) should be run from the jump host.
+
+Create the app registration in Microsoft Entra ID:
+
+```shell
+./infra/scripts/postprovision/call-create-app-registrations.ps1
+```
+- Wait approximately 5 minutes for the registration to propagate.
 
 ### Login
 
@@ -62,19 +80,6 @@ Now that you have the username and password:
 - Enter the username and password in the fields provided.
 - Press **Connect** to connect to the jump host.
 
-> **WARNING**
->
-> Your organization may not allow the creation of Entra ID application registrations unless the host is joined
-> to a domain, InTune managed, or meets other security requirements.  If your organization has such security
-> requirements, set those up before continuing.
->
-> Microsoft employees:
->
-> - The jump host must be InTune managed.
-> - Create the Entra application registrations from the same system that you used to initially provision resources.
-> - Once the application registrations have been created, you can optionally turn on the firewall again.
->
-> The other actions (such as azd deploy) should still be run from the jump host.
 
 ### First time setup
 
@@ -90,14 +95,23 @@ From the jump host, launch Windows Terminal to setup required tools:
 
     ```shell
     powershell -ex AllSigned -c "Invoke-RestMethod 'https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1' -OutFile dotnet-install.ps1"
-    .\dotnet-install.ps1 -Channel 6.0
+    ```
+
+    ```shell
+    .\dotnet-install.ps1 -Version 7.0.100
     ```
 
 1. Add dotnet to the path environment variable
 
     ![#Add dotnet to the path variable](./docs/images/jumphost-path-setup.png)
 
-    Add the path: `C:\Users\{username}\AppData\Local\Microsoft\dotnet`.
+    Add the path: `%USERPROFILE%\AppData\Local\Microsoft\dotnet`.
+
+1. Add Nuget source
+
+    ```shell
+    dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
+    ```
 
 ### Download the code
 
@@ -112,10 +126,11 @@ cd .\modern-web-app-pattern-dotnet
 
 ### Authenticate to Azure
 
-1. [Sign in to the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli):
+1. [Sign in to Azure PowerShell interactively](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
-    ```shell
-    az login
+    ```pwsh
+    Install-Module Az
+    Connect-AzAccount
     ```
 
     This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/cli/azure/authenticate-azure-cli) for instructions on other mechanisms to sign in to the Azure CLI.
@@ -137,31 +152,23 @@ azd env new <Name of created environment>
 azd env set AZURE_LOCATION <Location>
 azd env set AZURE_RESOURCE_GROUP <name of application resource group from Azure Portal>
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
-az account set --subscription "<Azure Subscription ID>"
+azd env set NETWORK_ISOLATION "true"
+Set-AzContext -Subscription "<Azure Subscription ID>"
 ```
 
 Ensure you use the same configuration you used when provisioning the services.
 
-### Register the application in Microsoft Entra
+### Deploy from the jump host
 
-Give yourself permission to access the rg-HUB key vault and app config resources.
+Deploy the configuration from the jump host:
 
-- If running from your local system instead of the jump host, turn off the firewall in the key vault and app config resources.
-- In the rg-HUB key vault, add yourself to the _Key Vault Secrets Officer_ role in **Access Control (IAM)**.
-- In the rg-APPLICATION app config, add yourself to the _App Configuration Data Owner_ role in **Access Control (IAM)**.
+```shell
+$resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
+```
 
-> **WARNING**
->
-> It takes approximately 5 minutes to propagate RBAC and firewall changes.
-
-Create the Entra application registrations:
-
-- Open a new PowerShell terminal.
-- Change directory to the `modern-web-app-pattern-dotnet` directory.
-- Run `.\infra\scripts\create-app-registrations.ps1` -g `<name of your application resource group>`
-- Wait approximately 5 minutes for the registration to propagate.
-
-### Deploy the code from the jump host
+```shell
+./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName -NoPrompt
+```
 
 Deploy the code from the jump host:
 
