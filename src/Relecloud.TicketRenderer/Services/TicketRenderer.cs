@@ -6,7 +6,7 @@ namespace Relecloud.TicketRenderer.Services
     /// <summary>
     /// Creates a ticket image from a ticket render request event.
     /// </summary>
-    internal class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage) : ITicketRenderer
+    internal class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage, IBarcodeGenerator barcodeGenerator) : ITicketRenderer
     {
         // Default ticket image name format string (in case no path is specified).
         private const string TicketNameFormatString = "ticket-{0}.png";
@@ -55,26 +55,31 @@ namespace Relecloud.TicketRenderer.Services
 
             // Print concert details.
             canvas.DrawText(SKTextBlob.Create(request.Ticket.Concert.Artist, headerFont), 10, 30, bluePaint);
-            canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Concert.Location}   |   {request.Ticket.Concert.StartTime.UtcDateTime}", textFont), 10, 50, grayPaint);
+            canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Concert.Location}   |   {request.Ticket.Concert.StartTime.UtcDateTime:yyyy-MM-dd hh:mm tt}", textFont), 10, 50, grayPaint);
             canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Customer.Email}   |   ${request.Ticket.Concert.Price:F2}", textFont), 10, 70, grayPaint);
 
             // Print a fake barcode.
-            var random = new Random();
+            var barcode = barcodeGenerator.GenerateBarcode(request.Ticket).GetEnumerator();
             var offset = 15;
-            while (offset < 620)
+
+            while (barcode.MoveNext())
             {
-                var width = 2 * random.Next(1, 3);
+                var width = barcode.Current;
                 canvas.DrawRect(offset, 95, width, 90, blackPaint);
-                offset += width + (2 * random.Next(1, 3));
+
+                if (barcode.MoveNext())
+                {
+                    offset += width + barcode.Current;
+                }
             }
 
             using var image = surface.Snapshot();
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);
             
             // Generate an output path for the image if none is specified.
-            var outputPath = string.IsNullOrEmpty(request.PathName)
+            var outputPath = string.IsNullOrEmpty(request.OutputPath)
                 ? string.Format(TicketNameFormatString, request.Ticket.Id)
-                : request.PathName;
+                : request.OutputPath;
 
             if (await imageStorage.StoreImageAsync(data.AsStream(), outputPath, cancellationToken))
             {
@@ -104,7 +109,7 @@ namespace Relecloud.TicketRenderer.Services
             var assembly = typeof(TicketRenderer).Assembly;
             var fontResourceNames = assembly.GetManifestResourceNames().Where(s => s.Contains("Fonts"));
             return fontResourceNames.ToDictionary(
-                name => GetFontName(name),
+                GetFontName,
                 name => SKTypeface.FromStream(assembly.GetManifestResourceStream(name)));
         }
     }
