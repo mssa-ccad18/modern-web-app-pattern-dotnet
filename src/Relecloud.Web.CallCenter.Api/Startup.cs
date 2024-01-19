@@ -5,8 +5,10 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using Relecloud.Messaging.ServiceBus;
 using Relecloud.Models.Services;
 using Relecloud.Web.Api.Infrastructure;
 using Relecloud.Web.Api.Services;
@@ -15,6 +17,7 @@ using Relecloud.Web.Api.Services.Search;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Web.Api.Services.TicketManagementService;
 using Relecloud.Web.CallCenter.Api.Infrastructure;
+using Relecloud.Web.CallCenter.Api.Services.TicketManagementService;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Services.Search;
 using System.Diagnostics;
@@ -31,16 +34,27 @@ namespace Relecloud.Web.Api
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
+            var azureCredential = GetAzureCredential();
+
             // Add services to the container.
             AddAzureAdServices(services);
 
             services.AddControllers();
+
+            services.AddAzureAppConfiguration();
+
+            // Enable feature management for easily enabling or disabling
+            // optional features like rendering tickets out-of-process.
+            services.AddFeatureManagement();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
             services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
+
+            // Add Azure Service Bus message bus.
+            services.AddAzureServiceBusMessageBus("App:ServiceBus", azureCredential);
 
             AddAzureSearchService(services);
             AddConcertContextServices(services);
@@ -53,6 +67,17 @@ namespace Relecloud.Web.Api
             // they are all properly initialized upon construction.
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
+
+        private TokenCredential GetAzureCredential() =>
+            Configuration["App:AzureCredentialType"] switch
+            {
+                "AzureCLI" => new AzureCliCredential(),
+                "Environment" => new EnvironmentCredential(),
+                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
+                "VisualStudio" => new VisualStudioCredential(),
+                "VisualStudioCode" => new VisualStudioCodeCredential(),
+                _ => new DefaultAzureCredential(),
+            };
 
         private void AddAzureAdServices(IServiceCollection services)
         {
@@ -71,7 +96,14 @@ namespace Relecloud.Web.Api
             else
             {
                 services.AddScoped<ITicketManagementService, TicketManagementService>();
-                services.AddScoped<ITicketRenderingService, TicketRenderingService>();
+
+                // Reading a feature flag is an asynchronous operation, so it's not possible
+                // to register an ITicketRenderingService provider method directly. Instead,
+                // use a factory pattern to retrieve the service asynchronously.
+                services.AddScoped<ITicketRenderingServiceFactory, FeatureDependentTicketRenderingServiceFactory>();
+                services.AddScoped<LocalTicketRenderingService>();
+                services.AddScoped<DistributedTicketRenderingService>();
+                services.AddHostedService<TicketRenderCompleteMessageHandler>();
             }
         }
 
@@ -163,6 +195,9 @@ namespace Relecloud.Web.Api
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
+            // Allows refreshing configuration values from Azure App Configuration
+            app.UseAzureAppConfiguration();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

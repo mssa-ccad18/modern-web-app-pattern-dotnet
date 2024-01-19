@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
@@ -12,7 +12,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.1" />
-		<PackageReference Include="Azure.Identity" Version="1.10.2" />
+		<PackageReference Include="Azure.Identity" Version="1.10.4" />
 		<PackageReference Include="Azure.Search.Documents" Version="11.4.0-beta.5" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.13.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.12" />
@@ -30,6 +30,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
+		<PackageReference Include="Microsoft.FeatureManagement" Version="3.1.1" />
 		<PackageReference Include="Microsoft.Identity.Web" Version="1.23.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -39,6 +40,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Relecloud.Models\Relecloud.Models.csproj" />
+		<ProjectReference Include="..\Relecloud.Messaging\Relecloud.Messaging.csproj" />
 	</ItemGroup>
 
 </Project>
