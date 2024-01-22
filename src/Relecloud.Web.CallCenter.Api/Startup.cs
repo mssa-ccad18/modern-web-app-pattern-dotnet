@@ -168,7 +168,9 @@ namespace Relecloud.Web.Api
             // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
             // https://devblogs.microsoft.com/azure-sdk/lifetime-management-and-thread-safety-guarantees-of-azure-sdk-net-clients/
             services.AddSingleton<ITicketImageService, TicketImageService>();
-            services.AddSingleton(sp => new BlobServiceClient(new Uri(Configuration["App:StorageAccount:Uri"]), GetAzureCredential()));
+            var storageAccountUri = Configuration["App:StorageAccount:Uri"]
+                ?? throw new InvalidOperationException("Required configuration missing. Could not find App:StorageAccount:Uri setting.");
+            services.AddSingleton(sp => new BlobServiceClient(new Uri(storageAccountUri), GetAzureCredential()));
         }
 
         private TokenCredential GetAzureCredential() =>
