@@ -162,8 +162,27 @@ var redisConnectionSecretName= isPrimaryLocation ? 'App--RedisCache--ConnectionS
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
 
+// Service Bus queues used for ticket rendering
+// Match the names in set-app-configuration.ps1
+var renderingQueueNames = [ 'ticket-render-requests', 'ticket-render-completions']
+
 // Built-in Azure Contributor role
 var contributorRole = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+
+// Allows push and pull access to Azure Container Registry images.
+var containerRegistryPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
+
+// Allows pull access to Azure Container Registry images.
+var containerRegistryPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+
+// Allows all operations on a Service Bus namespace.
+var serviceBusDataOwnerRoleId = '090c5cfd-751d-490a-894a-3ce6f1109419'
+
+// Allows sending messages to a Service Bus namespace's queues and topics.
+var serviceBusDataSenderRoleId = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
+
+// Allows receiving messages to a Service Bus namespace's queues and topics.
+var serviceBusDataReceiverRoleId = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 
 // ========================================================================
 // EXISTING RESOURCES
@@ -547,6 +566,141 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (isPrimaryLocation) {
+  name: 'application-container-registry'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.containerRegistry
+    location: deploymentSettings.location
+    tags: moduleTags
+    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
+
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
+
+    // Settings
+    acrAdminUserEnabled: false
+    anonymousPullEnabled: false
+    exportPolicyStatus: 'disabled'
+    zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
+    replications: deploymentSettings.isMultiLocationDeployment ? [
+      {
+        name: deploymentSettings.secondaryLocation
+        location: deploymentSettings.secondaryLocation
+        zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+        tags: moduleTags
+      }
+    ] : null
+    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
+      {
+        privateDnsZoneResourceIds: [
+          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        service: 'registry'
+      }
+    ] : null
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPullRoleId
+      }
+    ]
+  }
+}
+
+module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
+  name: 'application-service-bus-namespace'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.serviceBusNamespace
+    location: deploymentSettings.location
+    tags: moduleTags
+    skuObject: {
+      name: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' : 'Basic'
+      capacity: 1
+    }
+
+    diagnosticSettings:[
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
+
+    // Settings
+    disableLocalAuth: true
+    minimumTlsVersion: '1.2'
+    publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
+    zoneRedundant: deploymentSettings.isProduction
+    networkRuleSets: deploymentSettings.isNetworkIsolated ? {
+      trustedServiceAccessEnabled: true
+    } : null
+
+    // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
+    // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
+    // provide an empty array explicitly.
+    authorizationRules:[]
+
+    privateEndpoints: deploymentSettings.isNetworkIsolated ?  [
+      {
+        service: 'namespace'
+        privateDnsZoneResourceIds: [
+          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.servicebus.windows.net')
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+      }
+    ] : null
+
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: serviceBusDataOwnerRoleId
+      }
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataOwnerRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataSenderRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataReceiverRoleId
+      }
+    ]
+
+    queues: [ for queueName in renderingQueueNames: {
+        name: queueName
+
+        // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
+        // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
+        // provide an empty array explicitly.
+        authorizationRules:[]
+      }
+    ]
+  }
+}
+
 // ========================================================================
 // OUTPUTS
 // ========================================================================
@@ -554,6 +708,8 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
 output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
+output container_registry_login_server string = isPrimaryLocation ? containerRegistry.outputs.loginServer : ''
+output service_bus_name string = serviceBusNamespace.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
 output app_managed_identity_id string = appManagedIdentity.outputs.id
