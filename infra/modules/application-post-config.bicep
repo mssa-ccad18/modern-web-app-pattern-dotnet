@@ -99,11 +99,17 @@ param redisCacheNamePrimary string
 @description('Name of the second Azure Cache for Redis.')
 param redisCacheNameSecondary string
 
-@description('Name of the resource group containing Azure Cache for Redis.')
+@description('Name of the primary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
 param applicationResourceGroupNamePrimary string
 
-@description('Name of the resource group containing Azure Cache for Redis.')
+@description('Name of the secondary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
 param applicationResourceGroupNameSecondary string
+
+@description('Name of the primary Service Bus namespace.')
+param serviceBusNamespacePrimary string
+
+@description('Name of the primary Service Bus namespace.')
+param serviceBusNamespaceSecondary string
 
 @description('List of user assigned managed identities that will receive Secrets User role to the shared key vault')
 param readerIdentities object[]
@@ -124,8 +130,10 @@ var microsoftEntraIdSignedOutCallbackPath = 'MicrosoftEntraId--SignedOutCallback
 var microsoftEntraIdTenantId = 'MicrosoftEntraId--TenantId'
 var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
 var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
+var serviceBusConnectionStringPrimary = 'App--RenderRequestQueue--ConnectionString--Primary'
+var serviceBusConnectionStringSecondary = 'App--RenderRequestQueue--ConnectionString--Secondary'
 
-var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
+var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary, serviceBusConnectionStringSecondary] : []
 
 var listOfAppConfigSecrets = [
   microsoftEntraIdApiClientId
@@ -143,6 +151,7 @@ var listOfAppConfigSecrets = [
 var listOfSecretNames = union(listOfAppConfigSecrets,
   [
     redisCacheSecretNamePrimary
+    serviceBusConnectionStringPrimary
   ], multiRegionalSecrets)
 
 // ========================================================================
@@ -161,6 +170,26 @@ resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing =
 resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
   name: redisCacheNameSecondary
   scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? applicationResourceGroupNameSecondary : applicationResourceGroupNamePrimary)
+}
+
+resource existingPrimaryServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
+  name: serviceBusNamespacePrimary
+  scope: resourceGroup(applicationResourceGroupNamePrimary)
+}
+
+resource existingSecondaryServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = if (deploymentSettings.isMultiLocationDeployment) {
+  name: serviceBusNamespaceSecondary
+  scope: resourceGroup(applicationResourceGroupNameSecondary)
+}
+
+resource existingPrimaryRenderRequestQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' existing = {
+  name: 'ticket-render-requests'
+  parent: existingPrimaryServiceBusNamespace
+}
+
+resource existingSecondaryRenderRequestQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' existing = if (deploymentSettings.isMultiLocationDeployment) {
+  name: 'ticket-render-requests'
+  parent: existingSecondaryServiceBusNamespace
 }
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
@@ -219,6 +248,28 @@ module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if
   }
 }
 
+module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = {
+  name: 'write-primary-render-queue-connection-string'
+  scope: existingKvResourceGroup
+  params: {
+    name: existingKeyVault.name
+    secrets: [
+      { key: serviceBusConnectionStringPrimary, value: listKeys('${existingPrimaryRenderRequestQueue.id}/AuthorizationRules/manage-render-queue-policy', existingPrimaryRenderRequestQueue.apiVersion).primaryConnectionString }
+    ]
+  }
+}
+
+module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
+  name: 'write-secondary-render-queue-connection-string'
+  scope: existingKvResourceGroup
+  params: {
+    name: existingKeyVault.name
+    secrets: [
+      { key: serviceBusConnectionStringSecondary, value: listKeys('${existingSecondaryRenderRequestQueue.id}/AuthorizationRules/manage-render-queue-policy', existingSecondaryRenderRequestQueue.apiVersion).primaryConnectionString }
+    ]
+  }
+}
+
 // ======================================================================== //
 // Microsoft Entra Application Registration placeholders
 // ======================================================================== //
@@ -239,7 +290,7 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 
 module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
   scope: existingKvResourceGroup
-  name: 'grant-kv-access-for-${secretName}'
+  name: take('grant-kv-access-for-${secretName}', 64)
   params: {
     keyVaultName: existingKeyVault.name
     readerIdentities: readerIdentities

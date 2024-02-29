@@ -69,14 +69,26 @@ param tags object = {}
 @description('The name of the App Configuration store to use for configuration.')
 param appConfigurationName string
 
-@description('The name of the container registry to use for the container image.')
-param containerRegistryName string
+@description('The container registry server to use for the container image.')
+param containerRegistryLoginServer string
 
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string
 
 @description('The managed identity to use as the identity of the Container Apps.')
 param managedIdentityName string
+
+@description('The name of the Key Vault to use for secrets.')
+param keyVaultName string
+
+@description('The name of the resource group containing the Key Vault.')
+param keyVaultResourceGroupName string
+
+@description('The name of the Service Bus namespace for ticket render requests which will be used to trigger scaling.')
+param renderRequestServiceBusNamespace string
+
+@description('The name of the Service Bus queue for ticket render requests which will be used to trigger scaling.')
+param renderRequestServiceBusQueueName string
 
 /*
 ** Settings
@@ -91,6 +103,16 @@ param renderingServiceContainerAppName string
 param subnetId string?
 
 // ========================================================================
+// VARIABLES
+// ========================================================================
+
+// True if deploying into the primary region in a multi-region deployment, otherwise false
+var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
+
+// The name of the secret in the Key Vault containing the Service Bus connection string
+var serviceBusConnectionStringSecretName = 'App--RenderRequestQueue--ConnectionString--${isPrimaryLocation? 'Primary' : 'Secondary'}'
+
+// ========================================================================
 // AZURE RESOURCES
 // ========================================================================
 
@@ -102,8 +124,9 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: managedIdentityName
 }
 
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' existing = {
-  name: containerRegistryName
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: keyVaultName
+  scope: resourceGroup(keyVaultResourceGroupName)
 }
 
 module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
@@ -201,16 +224,41 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
 
     registries: [
       {
-        server: containerRegistry.properties.loginServer
+        server: containerRegistryLoginServer
         identity: managedIdentity.id
       }
     ]
 
+    secrets: {
+      secureList: [
+        // Key Vault secrets are not populated yet when this template is deployed.
+        // Therefore, no secrets are added at this time. Instead, they are added
+        // by the pre-deployment 'call-configure-aca-secrets' that is executed
+        // as part of `azd deploy`.
+      ]
+    }
+
     scaleRules: [
-      // TODO: Add scale rules and update min replicas to 0
+      {
+        name: 'service-bus-queue-length-rule'
+        custom: {
+          type: 'azure-servicebus'
+          metadata: {
+            messageCount: '10'
+            namespace: renderRequestServiceBusNamespace
+            queueName: renderRequestServiceBusQueueName
+          }
+          auth: [
+            {
+              secretRef: 'render-request-queue-connection-string'
+              triggerParameter: 'connection'
+            }
+          ]
+        }
+      }
     ]
     scaleMaxReplicas: 5
-    scaleMinReplicas: 1
+    scaleMinReplicas: 0
 
     workloadProfileName: 'Consumption'
   }
