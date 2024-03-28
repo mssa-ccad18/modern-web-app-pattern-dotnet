@@ -17,7 +17,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -41,6 +41,9 @@ type DeploymentSettings = {
 
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
+
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
 
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
@@ -116,7 +119,7 @@ param subnets object = {}
 param frontDoorSettings FrontDoorSettings
 
 @description('The name of the shared Azure Container Registry used in network isolated scenarios.')
-param sharedAzureContainerRegistry string = ''
+param sharedAzureContainerRegistry string
 
 /*
 ** Settings
@@ -224,7 +227,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
 ** Identities used by the application.
 */
 module ownerManagedIdentity '../core/identity/managed-identity.bicep' = {
-  name: 'owner-managed-identity'
+  name: 'owner-managed-identity-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.ownerManagedIdentity
@@ -234,7 +237,7 @@ module ownerManagedIdentity '../core/identity/managed-identity.bicep' = {
 }
 
 module appManagedIdentity '../core/identity/managed-identity.bicep' = {
-  name: 'application-managed-identity'
+  name: 'application-managed-identity-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.appManagedIdentity
@@ -244,7 +247,7 @@ module appManagedIdentity '../core/identity/managed-identity.bicep' = {
 }
 
 module ownerManagedIdentityRoleAssignment '../core/identity/resource-group-role-assignment.bicep' = {
-  name: 'owner-managed-identity-role-assignment'
+  name: 'owner-managed-identity-role-assignment-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     identityName: ownerManagedIdentity.outputs.name
@@ -257,7 +260,7 @@ module ownerManagedIdentityRoleAssignment '../core/identity/resource-group-role-
 ** App Configuration - used for storing configuration data
 */
 module appConfiguration '../core/config/app-configuration.bicep' = {
-  name: 'application-app-configuration'
+  name: 'application-app-configuration-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.appConfiguration
@@ -292,7 +295,7 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
 ** This vault is deployed with the application when not using Network Isolation.
 */
 module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isNetworkIsolated) {
-  name: 'application-key-vault'
+  name: 'application-key-vault-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.keyVault
@@ -325,7 +328,7 @@ module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isN
 ** SQL Database
 */
 module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
-  name: 'application-sql-server'
+  name: 'application-sql-server-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.sqlServer
@@ -347,7 +350,7 @@ module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
 }
 
 module sqlDatabase '../core/database/sql-database.bicep' = {
-  name: 'application-sql-database'
+  name: 'application-sql-database-${deploymentSettings.resourceToken}'
   scope: az.resourceGroup(resourceNames.sqlResourceGroup)
   params: {
     name: resourceNames.sqlDatabase
@@ -376,13 +379,13 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
 ** App Services
 */
 module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCommonAppServicePlan) {
-  name: 'application-app-service-plan'
+  name: 'application-app-service-plan-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.commonAppServicePlan
     location: deploymentSettings.location
     tags: moduleTags
-
+    
     // Dependencies
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
@@ -395,14 +398,14 @@ module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCo
 }
 
 module webService './application-appservice.bicep' = {
-  name: 'application-webservice'
+  name: 'application-webservice-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     deploymentSettings: deploymentSettings
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-
+    
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -428,7 +431,7 @@ module webService './application-appservice.bicep' = {
 }
 
 module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (isPrimaryLocation) {
-  name: 'web-service-front-door-route'
+  name: 'web-service-front-door-route-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     frontDoorEndpointName: frontDoorSettings.endpointName
@@ -447,14 +450,14 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (
 }
 
 module webFrontend './application-appservice.bicep' = {
-  name: 'application-webfrontend'
+  name: 'application-webfrontend-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     deploymentSettings: deploymentSettings
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-
+    
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -478,7 +481,7 @@ module webFrontend './application-appservice.bicep' = {
 }
 
 module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if (isPrimaryLocation) {
-  name: 'web-frontend-front-door-route'
+  name: 'web-frontend-front-door-route-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     frontDoorEndpointName: frontDoorSettings.endpointName
@@ -501,7 +504,7 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if 
 */
 
 module redis '../core/database/azure-cache-for-redis.bicep' = {
-  name: 'application-redis'
+  name: 'application-redis-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.redis
@@ -512,7 +515,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
-
+    
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.redisPrivateEndpoint
@@ -527,7 +530,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
 */
 
 module storageAccount '../core/storage/storage-account.bicep' = {
-  name: 'application-storage-account'
+  name: 'application-storage-account-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     location: deploymentSettings.location
@@ -552,7 +555,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
 }
 
 module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
-  name: 'application-storage-account-container'
+  name: 'application-storage-account-container-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.storageAccountContainer
@@ -565,7 +568,7 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
 }
 
 module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated && isPrimaryLocation) {
-  name: 'approve-front-door-routes'
+  name: 'approve-front-door-routes-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     location: deploymentSettings.location
@@ -581,7 +584,7 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
 }
 
 module applicationBudget '../core/cost-management/budget.bicep' = {
-  name: 'application-budget'
+  name: 'application-budget-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.budget
@@ -593,12 +596,13 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
+
 /*
 ** Azure Service Bus
 */
 
 module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
-  name: 'application-service-bus-namespace'
+  name: 'application-service-bus-namespace-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.serviceBusNamespace
@@ -686,20 +690,16 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 ** The registry is deployed with the application when not using network isolation. When using network isolation, the registry is deployed with the hub.
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (!deploymentSettings.isNetworkIsolated) {
-  name: 'application-container-registry'
+module containerRegistry '../core/containers/container-registry.bicep' = if (!deploymentSettings.isNetworkIsolated) {
+  name: 'application-container-registry-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
-    name: resourceNames.containerRegistry
+    name: sharedAzureContainerRegistry
     location: deploymentSettings.location
     tags: moduleTags
     acrSku: deploymentSettings.isProduction ? 'Premium' :  'Basic'
 
-    diagnosticSettings: [
-      {
-        workspaceResourceId: logAnalyticsWorkspaceId
-      }
-    ]
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
     // Settings
     acrAdminUserEnabled: false
