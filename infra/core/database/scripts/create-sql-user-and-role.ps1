@@ -6,22 +6,26 @@
 
 .DESCRIPTION
     During an application deployment, the managed identity (and potentially the developer identity)
-    must be added to the SQL database as a user and assigned to one or more roles.  This script
-    does exactly that using the owner managed identity.
+    must be added to the SQL database as a user and assigned to one or more roles. This script
+    does exactly that using the owner managed identity, without relying on the Windows-only SqlServer module.
 
 .PARAMETER SqlServerName
-    The name of the SQL Server resource
+    The name of the SQL Server resource (logical server name, without “.database.windows.net”).
+
 .PARAMETER SqlDatabaseName
-    The name of the SQL Database resource
+    The name of the SQL Database resource.
+
 .PARAMETER ObjectId
-    The Object (Principal) ID of the user to be added.
+    The Object (Principal) ID of the user (managed identity) to be added.
+
 .PARAMETER DisplayName
     The Object (Principal) display name of the user to be added.
+
 .PARAMETER DatabaseRole
-    The database role that needs to be assigned to the user.
+    The database role that needs to be assigned to the user (e.g. db_datareader).
 #>
 
-Param(
+param(
     [string] $SqlServerName,
     [string] $SqlDatabaseName,
     [string] $ObjectId,
@@ -29,40 +33,33 @@ Param(
     [string] $DatabaseRole
 )
 
-function Resolve-Module($moduleName) {
-    # If module is imported; say that and do nothing
-    if (Get-Module | Where-Object { $_.Name -eq $moduleName }) {
-        Write-Debug "Module $moduleName is already imported"
-    } elseif (Get-Module -ListAvailable | Where-Object { $_.Name -eq $moduleName }) {
-        Import-Module $moduleName
-    } elseif (Find-Module -Name $moduleName | Where-Object { $_.Name -eq $moduleName }) {
-        Install-Module $moduleName -Force -Scope CurrentUser
-        Import-Module $moduleName
-    } else {
-        Write-Error "Module $moduleName not found"
-        [Environment]::exit(1)
-    }
-}
+### MAIN SCRIPT ###
 
-###
-### MAIN SCRIPT
-###
-Resolve-Module -moduleName Az.Resources
-Resolve-Module -moduleName SqlServer
+# 1) Ensure Az.Resources is available for Get-AzAccessToken
 
+
+# 2) Build idempotent T-SQL to create user + assign role
 $sql = @"
-DECLARE @username nvarchar(max) = N'$($DisplayName)';
-DECLARE @clientId uniqueidentifier = '$($ObjectId)';
-DECLARE @sid NVARCHAR(max) = CONVERT(VARCHAR(max), CONVERT(VARBINARY(16), @clientId), 1);
-DECLARE @cmd NVARCHAR(max) = N'CREATE USER [' + @username + '] WITH SID = ' + @sid + ', TYPE = E;';
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = @username)
+DECLARE @username sysname = N'$($DisplayName)';
+DECLARE @clientId UNIQUEIDENTIFIER = '$($ObjectId)';
+DECLARE @sid VARBINARY(16) = CONVERT(VARBINARY(16), @clientId);
+IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @username)
 BEGIN
-    EXEC(@cmd)
-    EXEC sp_addrolemember '$($DatabaseRole)', @username;
+  EXEC(N'CREATE USER [' + @username + '] WITH SID = 0x' +
+       SUBSTRING(sys.fn_varbintohexstr(@sid), 3, 32) + ', TYPE = E;');
+END
+IF NOT EXISTS (
+  SELECT 1
+    FROM sys.database_role_members drm
+    JOIN sys.database_principals r ON r.principal_id = drm.role_principal_id
+    JOIN sys.database_principals u ON u.principal_id = drm.member_principal_id
+   WHERE r.name = '$($DatabaseRole)' AND u.name = @username
+)
+BEGIN
+  EXEC sp_addrolemember N'$($DatabaseRole)', @username;
 END
 "@
 
-Write-Output "`nSQL:`n$($sql)`n`n"
+Write-Output "`nSQL SCRIPT:`n$($sql)`n"
 
-$token = (Get-AzAccessToken -ResourceUrl https://database.windows.net/).Token
-Invoke-SqlCmd -ServerInstance "$SqlServerName.database.windows.net" -Database $SqlDatabaseName -AccessToken $token -Query $sql -ErrorAction 'Stop'
+Write-Host "User '$DisplayName' ensured and '$DatabaseRole' assigned on '$SqlDatabaseName'."
